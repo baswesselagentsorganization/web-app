@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "titel": "Taak 15: Refactor authenticatie module",
+    "status": "wacht_op_akkoord"
+  },
+  {
+    "id": 2,
+    "titel": "Taak 16: Dashboard statistieken toevoegen",
+    "status": "wacht_op_akkoord"
+  },
+  {
+    "id": 3,
+    "titel": "Taak 12: API-endpoints documenteren",
+    "status": "akkoord"
+  },
+  {
+    "id": 4,
+    "titel": "Taak 11: Testomgeving opzetten",
+    "status": "afgewezen"
+  },
+  {
+    "id": 5,
+    "titel": "Taak 17: Logging verbeteren",
+    "status": "wacht_op_akkoord"
+  },
+  {
+    "id": 6,
+    "titel": "Taak 10: README bijwerken",
+    "status": "akkoord"
+  }
+]
