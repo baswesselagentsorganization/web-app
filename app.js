@@ -7,6 +7,9 @@ let taken = [];
 /** Currently active filter: 'alle' | 'wacht_op_akkoord' | 'bezig' | 'klaar' | 'mislukt' */
 let activeFilter = 'alle';
 
+/** Whether to show completed/cancelled tasks */
+let toonAfgerond = false;
+
 const STATUS_LABELS = {
   nieuw: 'Nieuw',
   gepland: 'Gepland',
@@ -76,13 +79,17 @@ function updateWachtAkkoordTeller() {
  */
 function renderLijst() {
   const lijst = document.getElementById('taak-lijst');
-  const zichtbaar = activeFilter === 'alle'
+  let zichtbaar = activeFilter === 'alle'
     ? taken
     : taken.filter(t => {
       if (activeFilter === 'bezig') return ['nieuw', 'gepland', 'bezig'].includes(t.status);
       if (activeFilter === 'mislukt') return ['mislukt', 'geannuleerd'].includes(t.status);
       return t.status === activeFilter;
     });
+
+  if (!toonAfgerond) {
+    zichtbaar = zichtbaar.filter(t => t.status !== 'klaar' && t.status !== 'geannuleerd');
+  }
 
   if (zichtbaar.length === 0) {
     lijst.textContent = '';
@@ -227,6 +234,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Wire up refresh button
   document.getElementById('btn-vernieuwen')?.addEventListener('click', laadTaken);
+
+  // Wire up toggle button
+  const btnToonAfgerond = document.getElementById('btn-toon-afgerond');
+  if (btnToonAfgerond) {
+    btnToonAfgerond.addEventListener('click', () => {
+      toonAfgerond = !toonAfgerond;
+      btnToonAfgerond.textContent = toonAfgerond ? 'verberg afgeronde taken' : 'toon afgeronde taken';
+      renderLijst();
+    });
+  }
 
   laadTaken();
 
