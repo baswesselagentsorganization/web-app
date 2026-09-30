@@ -100,6 +100,18 @@ function renderLijst() {
 }
 
 /**
+ * Format a date string for display.
+ * Returns the formatted date string, or the original value if invalid.
+ * @param {string} waarde
+ * @returns {string}
+ */
+function formatDatum(waarde) {
+  const datum = new Date(waarde);
+  return isNaN(datum.getTime()) ? waarde : datum.toLocaleString('nl-NL', { dateStyle: 'short', timeStyle: 'short' });
+}
+
+
+/**
  * Build a task card element for the given task.
  * @param {any} taak
  * @returns {HTMLLIElement}
@@ -121,8 +133,7 @@ function maakKaart(taak) {
   const meta = document.createElement('div');
   meta.className = 'taak-meta';
   
-  const datum = new Date(taak.bijgewerkt);
-  const datumTekst = isNaN(datum.getTime()) ? taak.bijgewerkt : datum.toLocaleString('nl-NL', { dateStyle: 'short', timeStyle: 'short' });
+  const datumTekst = formatDatum(taak.bijgewerkt);
   
   let metaText = `Agent: ${taak.agent} • Bijgewerkt: ${datumTekst}`;
   if (taak.repo) {
