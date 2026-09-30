@@ -22,8 +22,13 @@
 <body>
 
   <header class="app-header">
-    <h1>Takenbeheer</h1>
-    <p>Taken bekijken, goedkeuren of afwijzen</p>
+    <div class="header-content">
+      <div>
+        <h1 id="app-titel">Taken</h1>
+        <p>Taken bekijken, goedkeuren of afwijzen</p>
+      </div>
+      <button id="btn-vernieuwen" class="btn btn-vernieuwen" type="button" aria-label="Vernieuwen">↻</button>
+    </div>
   </header>
 
   <main>
@@ -31,8 +36,9 @@
     <nav class="filter-tabs" aria-label="Filter op status">
       <button class="filter-btn active" type="button" data-filter="alle">Alle</button>
       <button class="filter-btn" type="button" data-filter="wacht_op_akkoord">Wacht op akkoord</button>
-      <button class="filter-btn" type="button" data-filter="akkoord">Akkoord</button>
-      <button class="filter-btn" type="button" data-filter="afgewezen">Afgewezen</button>
+      <button class="filter-btn" type="button" data-filter="bezig">Bezig</button>
+      <button class="filter-btn" type="button" data-filter="klaar">Klaar</button>
+      <button class="filter-btn" type="button" data-filter="mislukt">Mislukt</button>
     </nav>
 
     <!-- Task list, populated by app.js -->
