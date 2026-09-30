@@ -44,6 +44,7 @@ async function laadTaken() {
     
     document.getElementById('app-titel').textContent = `Taken van ${data.eigenaar}`;
     renderLijst();
+    updateWachtAkkoordTeller();
   } catch (err) {
     console.error('Fout bij laden taken:', err);
     lijst.textContent = '';
@@ -51,6 +52,22 @@ async function laadTaken() {
     li.className = 'status-msg error';
     li.textContent = err.message;
     lijst.appendChild(li);
+  }
+}
+
+/**
+ * Werk de teller bij voor het aantal taken dat op akkoord wacht.
+ */
+function updateWachtAkkoordTeller() {
+  const tellerEl = document.getElementById('wacht-akkoord-teller');
+  if (!tellerEl) return;
+
+  const aantal = taken.filter(t => t.status === 'wacht_op_akkoord').length;
+  if (aantal > 0) {
+    tellerEl.textContent = `wacht op jouw akkoord: ${aantal}`;
+    tellerEl.style.display = 'block';
+  } else {
+    tellerEl.style.display = 'none';
   }
 }
 
