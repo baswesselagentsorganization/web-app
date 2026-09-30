@@ -113,6 +113,19 @@ main {
   font-weight: 600;
 }
 
+/* === Wacht op akkoord teller === */
+.wacht-akkoord-teller {
+  background-color: rgba(255, 180, 0, 0.15);
+  border: 1px solid rgba(255, 180, 0, 0.3);
+  color: #f5a623;
+  padding: 0.6rem 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-align: center;
+}
+
 /* === Task list === */
 #taak-lijst {
   list-style: none;
