@@ -1,35 +1,56 @@
 // app.js — Task list UI logic
-// Tasks are loaded from taken.json; all state changes are local (no backend).
+// Tasks are loaded from the real API
 
-/** @type {Array<{id: number, titel: string, status: string}>} */
+/** @type {Array<any>} */
 let taken = [];
 
-/** Currently active filter: 'alle' | 'wacht_op_akkoord' | 'akkoord' | 'afgewezen' */
+/** Currently active filter: 'alle' | 'wacht_op_akkoord' | 'bezig' | 'klaar' | 'mislukt' */
 let activeFilter = 'alle';
 
 const STATUS_LABELS = {
+  nieuw: 'Nieuw',
+  gepland: 'Gepland',
+  bezig: 'Bezig',
   wacht_op_akkoord: 'Wacht op akkoord',
-  akkoord: 'Akkoord',
-  afgewezen: 'Afgewezen',
+  klaar: 'Klaar',
+  mislukt: 'Mislukt',
+  geannuleerd: 'Geannuleerd'
 };
 
 /**
- * Fetch tasks from taken.json and initialise the list.
+ * Fetch tasks from /api/taken and initialise the list.
  */
 async function laadTaken() {
   const lijst = document.getElementById('taak-lijst');
-  lijst.innerHTML = '<li class="status-msg">Laden…</li>';
+  // Only show loading if empty, otherwise let it update seamlessly
+  if (taken.length === 0) {
+    lijst.textContent = '';
+    const msg = document.createElement('li');
+    msg.className = 'status-msg';
+    msg.textContent = 'Laden…';
+    lijst.appendChild(msg);
+  }
 
   try {
-    const response = await fetch('taken.json');
+    const response = await fetch('/api/taken');
     if (!response.ok) {
+      if (response.status === 403) {
+        throw new Error('Dit apparaat is niet bekend bij de hub.');
+      }
       throw new Error(`HTTP ${response.status}`);
     }
-    taken = await response.json();
+    const data = await response.json();
+    taken = data.taken;
+    
+    document.getElementById('app-titel').textContent = `Taken van ${data.eigenaar}`;
     renderLijst();
   } catch (err) {
     console.error('Fout bij laden taken:', err);
-    lijst.innerHTML = `<li class="status-msg error">Taken konden niet worden geladen (${err.message}).</li>`;
+    lijst.textContent = '';
+    const li = document.createElement('li');
+    li.className = 'status-msg error';
+    li.textContent = err.message;
+    lijst.appendChild(li);
   }
 }
 
@@ -40,14 +61,22 @@ function renderLijst() {
   const lijst = document.getElementById('taak-lijst');
   const zichtbaar = activeFilter === 'alle'
     ? taken
-    : taken.filter(t => t.status === activeFilter);
+    : taken.filter(t => {
+      if (activeFilter === 'bezig') return ['nieuw', 'gepland', 'bezig'].includes(t.status);
+      if (activeFilter === 'mislukt') return ['mislukt', 'geannuleerd'].includes(t.status);
+      return t.status === activeFilter;
+    });
 
   if (zichtbaar.length === 0) {
-    lijst.innerHTML = '<li class="status-msg">Geen taken in deze categorie.</li>';
+    lijst.textContent = '';
+    const li = document.createElement('li');
+    li.className = 'status-msg';
+    li.textContent = 'Geen taken in deze categorie.';
+    lijst.appendChild(li);
     return;
   }
 
-  lijst.innerHTML = '';
+  lijst.textContent = '';
   for (const taak of zichtbaar) {
     lijst.appendChild(maakKaart(taak));
   }
@@ -55,7 +84,7 @@ function renderLijst() {
 
 /**
  * Build a task card element for the given task.
- * @param {{id: number, titel: string, status: string}} taak
+ * @param {any} taak
  * @returns {HTMLLIElement}
  */
 function maakKaart(taak) {
@@ -72,26 +101,43 @@ function maakKaart(taak) {
   titel.className = 'taak-titel';
   titel.textContent = taak.titel;
 
+  const meta = document.createElement('div');
+  meta.className = 'taak-meta';
+  
+  const datum = new Date(taak.bijgewerkt);
+  const datumTekst = isNaN(datum.getTime()) ? taak.bijgewerkt : datum.toLocaleString('nl-NL', { dateStyle: 'short', timeStyle: 'short' });
+  
+  let metaText = `Agent: ${taak.agent} • Bijgewerkt: ${datumTekst}`;
+  if (taak.repo) {
+    metaText += ` • Repo: ${taak.repo}`;
+  }
+  meta.textContent = metaText;
+
   li.appendChild(badge);
   li.appendChild(titel);
+  li.appendChild(meta);
 
-  if (taak.status === 'wacht_op_akkoord') {
+  if (taak.akkoord) {
     const acties = document.createElement('div');
     acties.className = 'taak-acties';
 
     const btnAkkoord = document.createElement('button');
     btnAkkoord.className = 'btn btn-akkoord';
     btnAkkoord.type = 'button';
-    btnAkkoord.innerHTML = '✓ Akkoord';
+    btnAkkoord.textContent = '✓ Akkoord';
     btnAkkoord.setAttribute('aria-label', `Akkoord geven aan: ${taak.titel}`);
-    btnAkkoord.addEventListener('click', () => zetStatus(taak.id, 'akkoord'));
+    btnAkkoord.addEventListener('click', () => stuurAkkoord(taak.akkoord.id, 'akkoord', btnAkkoord, btnAfwijs));
 
     const btnAfwijs = document.createElement('button');
     btnAfwijs.className = 'btn btn-afwijs';
     btnAfwijs.type = 'button';
-    btnAfwijs.innerHTML = '✕ Afwijzen';
+    btnAfwijs.textContent = '✕ Afwijzen';
     btnAfwijs.setAttribute('aria-label', `Afwijzen: ${taak.titel}`);
-    btnAfwijs.addEventListener('click', () => zetStatus(taak.id, 'afgewezen'));
+    btnAfwijs.addEventListener('click', () => {
+      if (window.confirm('Weet je zeker dat je deze taak wilt afwijzen?')) {
+        stuurAkkoord(taak.akkoord.id, 'afwijzen', btnAkkoord, btnAfwijs);
+      }
+    });
 
     acties.appendChild(btnAkkoord);
     acties.appendChild(btnAfwijs);
@@ -102,15 +148,37 @@ function maakKaart(taak) {
 }
 
 /**
- * Update the status of a task in-memory and re-render the list.
- * @param {number} id
- * @param {string} nieuweStatus
+ * Send decision to the hub
+ * @param {number} akkoordId 
+ * @param {string} besluit 
+ * @param {HTMLButtonElement} btn1 
+ * @param {HTMLButtonElement} btn2 
  */
-function zetStatus(id, nieuweStatus) {
-  const taak = taken.find(t => t.id === id);
-  if (!taak) return;
-  taak.status = nieuweStatus;
-  renderLijst();
+async function stuurAkkoord(akkoordId, besluit, btn1, btn2) {
+  btn1.disabled = true;
+  btn2.disabled = true;
+  try {
+    const response = await fetch(`/api/akkoorden/${akkoordId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Hub': 'web'
+      },
+      body: JSON.stringify({ besluit })
+    });
+    
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.fout || `HTTP fout ${response.status}`);
+    }
+    
+    // Succes, lijst herladen
+    await laadTaken();
+  } catch (err) {
+    alert(`Actie mislukt: ${err.message}`);
+    btn1.disabled = false;
+    btn2.disabled = false;
+  }
 }
 
 /**
@@ -122,7 +190,11 @@ function setFilter(filter) {
 
   // Update button active state
   document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.filter === filter);
+    if (btn.dataset.filter === filter) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
   });
 
   renderLijst();
@@ -136,7 +208,17 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.addEventListener('click', () => setFilter(btn.dataset.filter));
   });
 
+  // Wire up refresh button
+  document.getElementById('btn-vernieuwen')?.addEventListener('click', laadTaken);
+
   laadTaken();
+
+  // Auto-refresh every 30 seconds if page is visible
+  setInterval(() => {
+    if (document.visibilityState === 'visible') {
+      laadTaken();
+    }
+  }, 30000);
 });
 
 // === Service Worker registration ===

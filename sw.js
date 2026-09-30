@@ -1,14 +1,13 @@
 // sw.js — Service Worker for offline caching
 // Caches app shell on install; serves cached files when offline.
 
-const CACHE_NAME = 'takenbeheer-v1';
+const CACHE_NAME = 'takenbeheer-v2';
 
 const APP_SHELL = [
   './',
   './index.html',
   './style.css',
   './app.js',
-  './taken.json',
   './manifest.json',
 ];
 
@@ -32,21 +31,13 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Fetch: network-first for JSON data, cache-first for everything else
+// Fetch: bypass service worker for API calls
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
 
-  if (url.pathname.endsWith('taken.json')) {
-    // Network-first: fresh data when online, fallback to cache
-    event.respondWith(
-      fetch(event.request)
-        .then(response => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-          return response;
-        })
-        .catch(() => caches.match(event.request))
-    );
+  if (url.pathname.startsWith('/api/')) {
+    // Let the browser handle API calls
+    return;
   } else {
     // Cache-first for static assets
     event.respondWith(
