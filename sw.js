@@ -1,7 +1,7 @@
 // sw.js — Service Worker for offline caching
 // Caches app shell on install; serves cached files when offline.
 
-const CACHE_NAME = 'takenbeheer-v2';
+const CACHE_NAME = 'takenbeheer-v3';
 
 const APP_SHELL = [
   './',
@@ -39,9 +39,17 @@ self.addEventListener('fetch', event => {
     // Let the browser handle API calls
     return;
   } else {
-    // Cache-first for static assets
+    // Network-first for static assets
     event.respondWith(
-      caches.match(event.request).then(cached => cached || fetch(event.request))
+      fetch(event.request)
+        .then(response => {
+          const clone = response.clone();
+          event.waitUntil(
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone))
+          );
+          return response;
+        })
+        .catch(() => caches.match(event.request))
     );
   }
 });
