@@ -130,7 +130,49 @@ main {
   font-weight: 600;
 }
 
-/* === Wacht op akkoord teller === */
+
+/* === Owner filter === */
+.eigenaar-filter {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.eigenaar-filter-btn {
+  flex-shrink: 0;
+  padding: 0.35rem 0.8rem;
+  border: 1.5px solid #333;
+  border-radius: 1.5rem;
+  background: transparent;
+  color: #aaa;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.eigenaar-filter-btn:hover,
+.eigenaar-filter-btn:focus {
+  border-color: #4a90d9;
+  color: #e8e8f0;
+  outline: none;
+}
+
+.eigenaar-filter-btn.active {
+  background-color: #4a90d9;
+  border-color: #4a90d9;
+  color: #fff;
+  font-weight: 600;
+}
+
+/* === Owner label on task cards === */
+.eigenaar-label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
 .wacht-akkoord-teller {
   background-color: rgba(255, 180, 0, 0.15);
   border: 1px solid rgba(255, 180, 0, 0.3);
@@ -169,6 +211,7 @@ main {
   border-radius: 0.75rem;
   padding: 1rem 1.1rem;
   border: 1px solid #2a2a4a;
+  border-left: 4px solid var(--eigenaar-kleur, transparent);
   transition: border-color 0.2s ease;
 }
 
