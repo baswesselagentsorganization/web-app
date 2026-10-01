@@ -192,21 +192,23 @@ function maakKaart(taak) {
   li.appendChild(titel);
   li.appendChild(meta);
 
+  let acties = null;
+
   if (taak.akkoord) {
-    const acties = document.createElement('div');
+    acties = document.createElement('div');
     acties.className = 'taak-acties';
 
     const btnAkkoord = document.createElement('button');
     btnAkkoord.className = 'btn btn-akkoord';
     btnAkkoord.type = 'button';
-    btnAkkoord.textContent = '✓ Akkoord';
+    btnAkkoord.textContent = '\u2713 Akkoord';
     btnAkkoord.setAttribute('aria-label', `Akkoord geven aan: ${taak.titel}`);
     btnAkkoord.addEventListener('click', () => stuurAkkoord(taak.akkoord.id, 'akkoord', btnAkkoord, btnAfwijs));
 
     const btnAfwijs = document.createElement('button');
     btnAfwijs.className = 'btn btn-afwijs';
     btnAfwijs.type = 'button';
-    btnAfwijs.textContent = '✕ Afwijzen';
+    btnAfwijs.textContent = '\u2755 Afwijzen';
     btnAfwijs.setAttribute('aria-label', `Afwijzen: ${taak.titel}`);
     btnAfwijs.addEventListener('click', () => {
       if (window.confirm('Weet je zeker dat je deze taak wilt afwijzen?')) {
@@ -216,13 +218,14 @@ function maakKaart(taak) {
 
     acties.appendChild(btnAkkoord);
     acties.appendChild(btnAfwijs);
-    li.appendChild(acties);
   }
 
   // Archive button for klaar / mislukt tasks
   if (['klaar', 'mislukt'].includes(taak.status)) {
-    const acties2 = document.createElement('div');
-    acties2.className = 'taak-acties';
+    if (!acties) {
+      acties = document.createElement('div');
+      acties.className = 'taak-acties';
+    }
 
     const btnArchive = document.createElement('button');
     btnArchive.className = 'btn icoon-knop';
@@ -248,8 +251,11 @@ function maakKaart(taak) {
       renderLijst();
     });
 
-    acties2.appendChild(btnArchive);
-    li.appendChild(acties2);
+    acties.appendChild(btnArchive);
+  }
+
+  if (acties) {
+    li.appendChild(acties);
   }
 
   return li;
