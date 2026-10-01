@@ -303,3 +303,29 @@ main {
     padding: 1.5rem 1rem;
   }
 }
+
+/* === Generic icon button (reusable) === */
+.icoon-knop {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: #aaa;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  font-size: 1rem;
+}
+
+.icoon-knop:hover {
+  background-color: rgba(74, 144, 217, 0.12);
+  color: #4a90d9;
+}
+
+.icoon-knop:focus {
+  outline: 2px solid #4a90d9;
+  outline-offset: 2px;
+}

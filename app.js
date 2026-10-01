@@ -17,6 +17,49 @@ const STATUS_LABELS = {
   geannuleerd: 'Geannuleerd'
 };
 
+const GESLOTEN_LK = 'verborgen-taken';
+
+/**
+ * Get IDs of hidden tasks from localStorage.
+ * @returns {string[]}
+ */
+function verborgenIds() {
+  try {
+    return JSON.parse(localStorage.getItem(GESLOTEN_LK) ?? '[]');
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Add a task ID to the hidden set and persist.
+ * @param {string|number} id
+ */
+function voegToeAanVerborgen(id) {
+  const ids = verborgenIds();
+  ids.push(String(id));
+  localStorage.setItem(GESLOTEN_LK, JSON.stringify(ids));
+}
+
+/**
+ * Toggle hidden state for a task ID.
+ * @param {string|number} id
+ * @returns {boolean} true if now hidden
+ */
+function toggleVerborgen(id) {
+  const ids = verborgenIds();
+  const idx = ids.indexOf(String(id));
+  if (idx === -1) {
+    ids.push(String(id));
+    localStorage.setItem(GESLOTEN_LK, JSON.stringify(ids));
+    return true;
+  }
+  ids.splice(idx, 1);
+  localStorage.setItem(GESLOTEN_LK, JSON.stringify(ids));
+  return false;
+}
+
+
 /**
  * Fetch tasks from /api/taken and initialise the list.
  */
@@ -84,7 +127,11 @@ function renderLijst() {
       return t.status === activeFilter;
     });
 
-  if (zichtbaar.length === 0) {
+  // Filter out hidden (archived) tasks
+  const ids = verborgenIds();
+  const nietVerborgen = zichtbaar.filter(t => ids.indexOf(String(t.id)) === -1);
+
+  if (nietVerborgen.length === 0) {
     lijst.textContent = '';
     const li = document.createElement('li');
     li.className = 'status-msg';
@@ -94,7 +141,7 @@ function renderLijst() {
   }
 
   lijst.textContent = '';
-  for (const taak of zichtbaar) {
+  for (const taak of nietVerborgen) {
     lijst.appendChild(maakKaart(taak));
   }
 }
@@ -170,6 +217,39 @@ function maakKaart(taak) {
     acties.appendChild(btnAkkoord);
     acties.appendChild(btnAfwijs);
     li.appendChild(acties);
+  }
+
+  // Archive button for klaar / mislukt tasks
+  if (['klaar', 'mislukt'].includes(taak.status)) {
+    const acties2 = document.createElement('div');
+    acties2.className = 'taak-acties';
+
+    const btnArchive = document.createElement('button');
+    btnArchive.className = 'btn icoon-knop';
+    btnArchive.type = 'button';
+    btnArchive.title = 'Archiveer';
+    btnArchive.setAttribute('aria-label', 'Archiveer: ' + taak.titel);
+
+    // Inline SVG: archive (folder with check)
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(svgNS, 'svg');
+    svg.setAttribute('width', '16');
+    svg.setAttribute('height', '16');
+    svg.setAttribute('viewBox', '0 0 16 16');
+    svg.setAttribute('fill', 'none');
+    svg.setAttribute('stroke', 'currentColor');
+    svg.setAttribute('stroke-width', '1.5');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.innerHTML = '<path d="M1 4.5A1.5 1.5 0 0 1 2.5 3h3.172a1.5 1.5 0 0 1 1.06.44l.824.82a1.5 1.5 0 0 0 1.06.44h3.474A1.5 1.5 0 0 1 12.5 6.5v6a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 1 12.5v-8z"/><path d="m4 9 2 2 4-4"/>';
+    btnArchive.appendChild(svg);
+
+    btnArchive.addEventListener('click', () => {
+      voegToeAanVerborgen(taak.id);
+      renderLijst();
+    });
+
+    acties2.appendChild(btnArchive);
+    li.appendChild(acties2);
   }
 
   return li;
