@@ -176,6 +176,33 @@ function formatDatum(waarde) {
  * @param {any} taak
  * @returns {HTMLLIElement}
  */
+/**
+ * Toggle a task's three-dot menu. Only one menu can be open at a time.
+ * @param {HTMLElement} menuEl
+ */
+function toggleMenu(menuEl) {
+  const dropdown = menuEl.querySelector('.taak-dropdown');
+  const isOpen = dropdown.classList && dropdown.classList.contains('open');
+
+  // Close all open menus first
+  document.querySelectorAll('.taak-dropdown.open').forEach(d => {
+    d.classList.remove('open');
+  });
+
+  if (!isOpen) {
+    dropdown.classList.add('open');
+  }
+}
+
+/**
+ * Close all open menus.
+ */
+function closeAllMenus() {
+  document.querySelectorAll('.taak-dropdown.open').forEach(d => {
+    d.classList.remove('open');
+  });
+}
+
 function maakKaart(taak) {
   const li = document.createElement('li');
   li.className = 'taak-kaart';
@@ -205,11 +232,10 @@ function maakKaart(taak) {
   li.appendChild(titel);
   li.appendChild(meta);
 
-  let acties = null;
+  const acties = document.createElement('div');
+  acties.className = 'taak-acties';
 
   if (taak.akkoord) {
-    acties = document.createElement('div');
-    acties.className = 'taak-acties';
 
     const btnAkkoord = document.createElement('button');
     btnAkkoord.className = 'btn btn-akkoord';
@@ -235,11 +261,6 @@ function maakKaart(taak) {
 
   // Archive button for klaar / mislukt tasks
   if (['klaar', 'mislukt'].includes(taak.status)) {
-    if (!acties) {
-      acties = document.createElement('div');
-      acties.className = 'taak-acties';
-    }
-
     const btnArchive = document.createElement('button');
     btnArchive.className = 'btn icoon-knop';
     btnArchive.type = 'button';
@@ -267,9 +288,34 @@ function maakKaart(taak) {
     acties.appendChild(btnArchive);
   }
 
-  if (acties) {
-    li.appendChild(acties);
+  // Three-dot menu button (always present)
+  const menuWrapper = document.createElement('div');
+  menuWrapper.className = 'taak-menu';
+
+  const menuBtn = document.createElement('button');
+  menuBtn.className = 'icoon-knop taak-menu-btn';
+  menuBtn.type = 'button';
+  menuBtn.textContent = '\u22EE';
+  menuBtn.setAttribute('aria-label', 'Meer opties');
+  menuBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleMenu(menuWrapper);
+  });
+
+  const dropdown = document.createElement('ul');
+  dropdown.className = 'taak-dropdown';
+
+  for (const label of ['Optie 1', 'Optie 2', 'Optie 3']) {
+    const optLi = document.createElement('li');
+    optLi.textContent = label;
+    dropdown.appendChild(optLi);
   }
+
+  menuWrapper.appendChild(menuBtn);
+  menuWrapper.appendChild(dropdown);
+  acties.appendChild(menuWrapper);
+
+  li.appendChild(acties);
 
   return li;
 }
@@ -346,10 +392,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   laadTaken();
 
+  // Close menus when clicking outside
+  document.addEventListener('click', closeAllMenus);
+
   // Auto-refresh every 30 seconds if page is visible
   setInterval(() => {
     if (document.visibilityState === 'visible') {
       laadTaken();
+
     }
   }, 30000);
 });
