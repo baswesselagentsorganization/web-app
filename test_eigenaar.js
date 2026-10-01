@@ -36,6 +36,7 @@ const context = {
       return context._els[id];
     },
     createElement: makeEl,
+    createElementNS: () => ({ setAttribute: () => {}, innerHTML: '', appendChild: () => {} }),
     querySelectorAll: () => [],
     addEventListener: () => {}
   },
@@ -85,34 +86,17 @@ assert.strictEqual(ids(filterTaken(dataOudeHub, 'alle', '', [], 'alle')), '1,2')
 assert.strictEqual(ids(filterTaken(dataOudeHub, 'alle', '', [], 'eigen')), '1,2');
 
 
-// --- Test 7-8: border color (direct property assignment) ---
+// --- Test 7-8: border color via setProperty in maakKaart ---
 
-// Test 7: ongeldige kleur — fallback naar grijs
-const li7 = vm.runInContext(`(() => {
-  const li = document.createElement('li');
-  const kleur = '#zzz' ?? '';
-  if (/^#[0-9a-fA-F]{6}$/.test(kleur)) {
-    li.style['--eigenaar-kleur'] = kleur;
-  } else {
-    li.style['--eigenaar-kleur'] = '#6b7280';
-  }
-  return li;
-})()`, context);
+// Test 7: ongeldige kleur — maakKaart roept setProperty en zet grijs
+const li7 = context.maakKaart({ id: 10, titel: 'Test', status: 'bezig', kleur: '#zzz', agent: 'test' });
 assert.strictEqual(li7.style['--eigenaar-kleur'], '#6b7280',
-  'ongeldige kleur -> grijs (#6b7280)');
+  'ongeldige kleur -> grijs (#6b7280) via setProperty');
 
-// Test 8: geldige kleur — border wel
-const li8 = vm.runInContext(`(() => {
-  const li = document.createElement('li');
-  const kleur = '#ea580c' ?? '';
-  if (/^#[0-9a-fA-F]{6}$/.test(kleur)) {
-    li.style['--eigenaar-kleur'] = kleur;
-  } else {
-    li.style['--eigenaar-kleur'] = '#6b7280';
-  }
-  return li;
-})()`, context);
-assert.strictEqual(li8.style['--eigenaar-kleur'], '#ea580c');
+// Test 8: geldige kleur — maakKaart roept setProperty met de kleur
+const li8 = context.maakKaart({ id: 11, titel: 'Test', status: 'bezig', kleur: '#ea580c', agent: 'test' });
+assert.strictEqual(li8.style['--eigenaar-kleur'], '#ea580c',
+  'geldige kleur via setProperty');
 
 // --- Test 9: geen akkoordknoppen bij eigen === false ---
 const taak3 = { id: 3, titel: 'Andermans taak', status: 'wacht_op_akkoord', eigen: false, eigenaar: 'Wessel', kleur: '#ea580c', akkoord: { id: 42 } };
