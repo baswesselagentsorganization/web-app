@@ -84,26 +84,31 @@ const dataOudeHub = [
 assert.strictEqual(ids(filterTaken(dataOudeHub, 'alle', '', [], 'alle')), '1,2');
 assert.strictEqual(ids(filterTaken(dataOudeHub, 'alle', '', [], 'eigen')), '1,2');
 
-// --- Test 7-8: border color (inline vm voor setProperty) ---
 
-// Test 7: ongeldige kleur — geen border
+// --- Test 7-8: border color (direct property assignment) ---
+
+// Test 7: ongeldige kleur — fallback naar grijs
 const li7 = vm.runInContext(`(() => {
   const li = document.createElement('li');
   const kleur = '#zzz' ?? '';
   if (/^#[0-9a-fA-F]{6}$/.test(kleur)) {
-    li.style.setProperty('--eigenaar-kleur', kleur);
+    li.style['--eigenaar-kleur'] = kleur;
+  } else {
+    li.style['--eigenaar-kleur'] = '#6b7280';
   }
   return li;
 })()`, context);
-assert.ok(li7.style['--eigenaar-kleur'] === undefined || li7.style['--eigenaar-kleur'] === '',
-  'ongeldige kleur mag geen --eigenaar-kleur zetten');
+assert.strictEqual(li7.style['--eigenaar-kleur'], '#6b7280',
+  'ongeldige kleur -> grijs (#6b7280)');
 
 // Test 8: geldige kleur — border wel
 const li8 = vm.runInContext(`(() => {
   const li = document.createElement('li');
   const kleur = '#ea580c' ?? '';
   if (/^#[0-9a-fA-F]{6}$/.test(kleur)) {
-    li.style.setProperty('--eigenaar-kleur', kleur);
+    li.style['--eigenaar-kleur'] = kleur;
+  } else {
+    li.style['--eigenaar-kleur'] = '#6b7280';
   }
   return li;
 })()`, context);

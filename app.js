@@ -292,7 +292,9 @@ function maakKaart(taak) {
   // Colored left border based on owner color
   const kleur = taak.kleur ?? '';
   if (/^#[0-9a-fA-F]{6}$/.test(kleur)) {
-    li.style.setProperty('--eigenaar-kleur', kleur);
+    li.style['--eigenaar-kleur'] = kleur;
+  } else {
+    li.style['--eigenaar-kleur'] = '#6b7280';
   }
 
   const badge = document.createElement('span');
