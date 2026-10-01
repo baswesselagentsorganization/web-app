@@ -72,6 +72,29 @@ main {
   margin: 0 auto;
 }
 
+/* === Search field === */
+.zoekveld {
+  display: block;
+  width: 100%;
+  margin-bottom: 0.75rem;
+  padding: 0.6rem 0.9rem;
+  border: 1.5px solid #333;
+  border-radius: 0.5rem;
+  background-color: #16213e;
+  color: #e8e8f0;
+  font-size: 1rem; /* 16px avoids iOS zoom on focus */
+  font-family: inherit;
+}
+
+.zoekveld::placeholder {
+  color: #888;
+}
+
+.zoekveld:focus {
+  border-color: #4a90d9;
+  outline: none;
+}
+
 /* === Status filter tabs === */
 .filter-tabs {
   display: flex;
