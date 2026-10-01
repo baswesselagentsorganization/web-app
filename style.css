@@ -143,6 +143,14 @@ main {
   text-align: center;
 }
 
+/* === Archived toggle button active state === */
+.filter-btn-gearchiveerd.active {
+  background-color: #f5a623;
+  border-color: #f5a623;
+  color: #1a1a2e;
+  font-weight: 600;
+}
+
 /* === Task list === */
 #taak-lijst {
   list-style: none;

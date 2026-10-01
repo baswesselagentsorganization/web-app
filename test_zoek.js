@@ -64,4 +64,27 @@ vm.runInContext("taken = [{id:1,titel:'a',status:'bezig'}]; zoekTekst = 'zzz'; r
 assert.strictEqual(lijstEl.children.length, 1);
 assert.strictEqual(lijstEl.children[0].textContent, 'Geen taken gevonden');
 
+
+// === Test 4: toonGearchiveerd toggle ===
+// When showArchived is false (default), hidden tasks stay hidden
+const data2 = [
+  { id: 1, titel: 'A', status: 'klaar' },
+  { id: 2, titel: 'B', status: 'mislukt' },
+  { id: 3, titel: 'C', status: 'bezig' }
+];
+assert.strictEqual(ids(filterTaken(data2, 'alle', '', ['1', '2'], false)), '3');
+
+// When showArchived is true, hidden tasks are shown
+assert.strictEqual(ids(filterTaken(data2, 'alle', '', ['1', '2'], true)), '1,2,3');
+
+// showArchived only affects hidden task display, not other filters
+assert.strictEqual(ids(filterTaken(data2, 'klaar', '', ['1', '2'], true)), '1');
+
+// showArchived works with search too
+assert.strictEqual(ids(filterTaken(data2, 'alle', 'B', ['1', '2'], true)), '2');
+
+// localStorage persistence: slaToonGearchiveerdOp and leesToonGearchiveerd exist and don't throw
+assert.strictEqual(typeof vm.runInContext("slaToonGearchiveerdOp", context), 'function');
+assert.strictEqual(typeof vm.runInContext("leesToonGearchiveerd", context), 'function');
+
 console.log('test_zoek: all tests passed');

@@ -22,6 +22,45 @@ const STATUS_LABELS = {
 
 const GESLOTEN_LK = 'verborgen-taken';
 
+const TOON_GEARCHIVEERD_LK = 'toon-gearchiveerd';
+
+/** Whether archived/hidden tasks should be shown. Default: false. */
+let toonGearchiveerd = false;
+
+/**
+ * Read the 'show archived' preference from localStorage.
+ */
+function leesToonGearchiveerd() {
+  try {
+    toonGearchiveerd = localStorage.getItem(TOON_GEARCHIVEERD_LK) === 'true';
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * Save the 'show archived' preference to localStorage.
+ */
+function slaToonGearchiveerdOp() {
+  try {
+    localStorage.setItem(TOON_GEARCHIVEERD_LK, String(toonGearchiveerd));
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * Toggle whether archived tasks are shown, persist the choice,
+ * and update the toggle button text.
+ * @param {HTMLButtonElement} btn
+ */
+function wisselToonGearchiveerd(btn) {
+  toonGearchiveerd = !toonGearchiveerd;
+  slaToonGearchiveerdOp();
+  renderLijst();
+  btn.textContent = toonGearchiveerd ? 'Verberg gearchiveerd' : 'Toon gearchiveerd';
+}
+
 /**
  * Get IDs of hidden tasks from localStorage.
  * @returns {string[]}
@@ -125,10 +164,10 @@ function updateWachtAkkoordTeller() {
  * @param {string[]} verborgen IDs of archived tasks
  * @returns {Array<any>}
  */
-function filterTaken(lijst, filter, zoek, verborgen) {
+function filterTaken(lijst, filter, zoek, verborgen, showArchived = false) {
   const naald = zoek.trim().toLowerCase();
   return lijst.filter(t => {
-    if (verborgen.indexOf(String(t.id)) !== -1) return false;
+    if (!showArchived && verborgen.indexOf(String(t.id)) !== -1) return false;
     if (naald && !String(t.titel ?? '').toLowerCase().includes(naald)) return false;
     if (filter === 'alle') return true;
     if (filter === 'bezig') return ['nieuw', 'gepland', 'bezig'].includes(t.status);
@@ -142,7 +181,7 @@ function filterTaken(lijst, filter, zoek, verborgen) {
  */
 function renderLijst() {
   const lijst = document.getElementById('taak-lijst');
-  const nietVerborgen = filterTaken(taken, activeFilter, zoekTekst, verborgenIds());
+  const nietVerborgen = filterTaken(taken, activeFilter, zoekTekst, verborgenIds(), toonGearchiveerd);
 
   if (nietVerborgen.length === 0) {
     lijst.textContent = '';
@@ -467,6 +506,14 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', () => setFilter(btn.dataset.filter));
   });
+
+  // Wire up the show/hide archived toggle button
+  leesToonGearchiveerd();
+  const btnGearchiveerd = document.getElementById('btn-gearchiveerd');
+  if (btnGearchiveerd) {
+    btnGearchiveerd.textContent = toonGearchiveerd ? 'Verberg gearchiveerd' : 'Toon gearchiveerd';
+    btnGearchiveerd.addEventListener('click', () => wisselToonGearchiveerd(btnGearchiveerd));
+  }
 
   // Wire up search field
   document.getElementById('taak-zoek')?.addEventListener('input', (e) => {
