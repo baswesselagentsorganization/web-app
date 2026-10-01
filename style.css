@@ -99,14 +99,8 @@ main {
 .filter-tabs {
   display: flex;
   gap: 0.5rem;
+  flex-wrap: wrap; /* wrap on narrow screens so every option stays visible */
   margin-bottom: 1rem;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.filter-tabs::-webkit-scrollbar {
-  display: none;
 }
 
 .filter-btn {
