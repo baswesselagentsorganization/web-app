@@ -141,7 +141,7 @@ vm.runInContext(appCode, ctx2);
 vm.runInContext("taken = [{ status: 'wacht_op_akkoord', eigen: true }, { status: 'wacht_op_akkoord', eigen: true }, { status: 'wacht_op_akkoord', eigen: false }, { status: 'bezig', eigen: true }];", ctx2);
 vm.runInContext("updateWachtAkkoordTeller();", ctx2);
 const tellerEl = ctx2.document.getElementById('wacht-akkoord-teller');
-assert.strictEqual(tellerEl.textContent, 'wacht op jouw akkoord: 2',
+assert.strictEqual(tellerEl.textContent, 'wacht op akkoord: 2',
   `teller moet 2 zijn, is ${tellerEl.textContent}`);
 
 console.log('test_eigenaar: all tests passed');

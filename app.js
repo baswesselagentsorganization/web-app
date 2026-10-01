@@ -13,6 +13,9 @@ let zoekTekst = '';
 /** Owner filter: 'alle' | 'eigen' */
 let eigenaarFilter = 'alle';
 
+/** Number of open approvals for the viewer, from the API (null if the API does not send it) */
+let openAkkoorden = null;
+
 /** Whether archived tasks are shown in the list (default: hidden) */
 let toonGearchiveerd = false;
 
@@ -28,46 +31,73 @@ const STATUS_LABELS = {
 
 const GESLOTEN_LK = 'verborgen-taken';
 
+const AFGEROND = ['klaar', 'mislukt', 'geannuleerd'];
+
 /**
- * Get IDs of hidden tasks from localStorage.
+ * Get IDs of archived tasks (as sent by the API).
  * @returns {string[]}
  */
-function verborgenIds() {
+function gearchiveerdeIds() {
+  return taken.filter(t => t.gearchiveerd === true).map(t => String(t.id));
+}
+
+/**
+ * Archive or restore a task on the server. The list is only updated after a 200 response.
+ * @param {any} taak
+ * @param {boolean} gearchiveerd
+ */
+async function zetGearchiveerd(taak, gearchiveerd) {
   try {
-    return JSON.parse(localStorage.getItem(GESLOTEN_LK) ?? '[]');
-  } catch {
-    return [];
+    const response = await fetch(`/api/taken/${taak.id}/archief`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Hub': 'web'
+      },
+      body: JSON.stringify({ gearchiveerd })
+    });
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.fout || `HTTP fout ${response.status}`);
+    }
+    taak.gearchiveerd = gearchiveerd;
+    renderLijst();
+  } catch (err) {
+    alert(`Archiveren mislukt: ${err.message}`);
   }
 }
 
 /**
- * Add a task ID to the hidden set and persist.
- * @param {string|number} id
+ * One-time move of the old localStorage archive list to the server.
+ * @returns {Promise<boolean>} true if the key was removed and the list should be reloaded
  */
-function voegToeAanVerborgen(id) {
-  const ids = verborgenIds();
-  ids.push(String(id));
-  localStorage.setItem(GESLOTEN_LK, JSON.stringify(ids));
-}
-
-/**
- * Toggle hidden state for a task ID.
- * @param {string|number} id
- * @returns {boolean} true if now hidden
- */
-function toggleVerborgen(id) {
-  const ids = verborgenIds();
-  const idx = ids.indexOf(String(id));
-  if (idx === -1) {
-    ids.push(String(id));
-    localStorage.setItem(GESLOTEN_LK, JSON.stringify(ids));
+async function migreerVerborgen() {
+  try {
+    const raw = localStorage.getItem(GESLOTEN_LK);
+    if (raw === null || raw === undefined) return false;
+    let ids = [];
+    try { ids = JSON.parse(raw); } catch { /* corrupt value: just drop it */ }
+    if (Array.isArray(ids)) {
+      for (const id of ids.map(String)) {
+        const taak = taken.find(t => String(t.id) === id);
+        if (!taak || taak.gearchiveerd === true || !AFGEROND.includes(taak.status)) continue;
+        await fetch(`/api/taken/${taak.id}/archief`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Hub': 'web'
+          },
+          body: JSON.stringify({ gearchiveerd: true })
+        });
+      }
+    }
+    localStorage.removeItem(GESLOTEN_LK);
     return true;
+  } catch (err) {
+    console.error('Overzetten van verborgen taken mislukt:', err);
+    return false;
   }
-  ids.splice(idx, 1);
-  localStorage.setItem(GESLOTEN_LK, JSON.stringify(ids));
-  return false;
 }
-
 
 /**
  * Fetch tasks from /api/taken and initialise the list.
@@ -99,9 +129,12 @@ async function laadTaken() {
       for (const t of taken) { t.eigen = true; }
     }
     
+    openAkkoorden = typeof data.open_akkoorden === 'number' ? data.open_akkoorden : null;
+
     document.getElementById('app-titel').textContent = `Taken van ${data.eigenaar}`;
     renderLijst();
     updateWachtAkkoordTeller();
+    if (await migreerVerborgen()) await laadTaken();
   } catch (err) {
     console.error('Fout bij laden taken:', err);
     lijst.textContent = '';
@@ -119,9 +152,9 @@ function updateWachtAkkoordTeller() {
   const tellerEl = document.getElementById('wacht-akkoord-teller');
   if (!tellerEl) return;
 
-  const aantal = taken.filter(t => t.status === 'wacht_op_akkoord' && t.eigen !== false).length;
+  const aantal = openAkkoorden ?? taken.filter(t => t.status === 'wacht_op_akkoord' && t.eigen !== false).length;
   if (aantal > 0) {
-    tellerEl.textContent = `wacht op jouw akkoord: ${aantal}`;
+    tellerEl.textContent = `wacht op akkoord: ${aantal}`;
     tellerEl.style.display = 'block';
   } else {
     tellerEl.style.display = 'none';
@@ -156,7 +189,7 @@ function filterTaken(lijst, filter, zoek, verborgen, eigenaarFilter, toonGearchi
  */
 function renderLijst() {
   const lijst = document.getElementById('taak-lijst');
-  const nietVerborgen = filterTaken(taken, activeFilter, zoekTekst, verborgenIds(), eigenaarFilter, toonGearchiveerd);
+  const nietVerborgen = filterTaken(taken, activeFilter, zoekTekst, gearchiveerdeIds(), eigenaarFilter, toonGearchiveerd);
 
   if (nietVerborgen.length === 0) {
     lijst.textContent = '';
@@ -338,7 +371,7 @@ function maakKaart(taak) {
   const acties = document.createElement('div');
   acties.className = 'taak-acties';
 
-  if (taak.akkoord && taak.eigen !== false) {
+  if (taak.akkoord) {
 
     const btnAkkoord = document.createElement('button');
     btnAkkoord.className = 'btn btn-akkoord';
@@ -363,11 +396,11 @@ function maakKaart(taak) {
   }
 
   // Archive button for klaar / mislukt / geannuleerd tasks
-  if (['klaar', 'mislukt', 'geannuleerd'].includes(taak.status)) {
+  if (AFGEROND.includes(taak.status)) {
     const btnArchive = document.createElement('button');
     btnArchive.className = 'btn icoon-knop';
     btnArchive.type = 'button';
-    const isGearchiveerd = verborgenIds().indexOf(String(taak.id)) !== -1;
+    const isGearchiveerd = taak.gearchiveerd === true;
     const actie = isGearchiveerd ? 'Dearchiveer' : 'Archiveer';
     btnArchive.title = actie;
     btnArchive.setAttribute('aria-label', actie + ': ' + taak.titel);
@@ -386,8 +419,7 @@ function maakKaart(taak) {
     btnArchive.appendChild(svg);
 
     btnArchive.addEventListener('click', () => {
-      toggleVerborgen(taak.id);
-      renderLijst();
+      zetGearchiveerd(taak, !isGearchiveerd);
     });
 
     acties.appendChild(btnArchive);
