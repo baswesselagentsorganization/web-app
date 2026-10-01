@@ -46,7 +46,7 @@ const testCode = `
   if (tellerEl.style.display === 'none') {
     throw new Error('Test 2 Failed: tellerEl.style.display should not be "none" for N=2');
   }
-  if (tellerEl.textContent !== 'wacht op jouw akkoord: 2') {
+  if (tellerEl.textContent !== 'wacht op akkoord: 2') {
     throw new Error('Test 2 Failed: tellerEl.textContent is incorrect, got: ' + tellerEl.textContent);
   }
   

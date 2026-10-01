@@ -185,47 +185,14 @@ for (const s of nonArchiveableStatuses) {
   }
 }
 
-// === Test 2: localStorage helpers ===
-dom.__hiddenStore = '[]';
+// === Test 2: archived state comes from the API field, not localStorage ===
 injectData(context, [
-  { id: 1, status: 'klaar', titel: 'A', agent: 'a', bijgewerkt: '2025-01-01T00:00:00Z' },
-  { id: 2, status: 'mislukt', titel: 'B', agent: 'a', bijgewerkt: '2025-01-01T00:00:00Z' },
-  { id: 3, status: 'bezig', titel: 'C', agent: 'a', bijgewerkt: '2025-01-01T00:00:00Z' }
+  { id: 1, status: 'klaar', titel: 'A', gearchiveerd: true, agent: 'a', bijgewerkt: '2025-01-01T00:00:00Z' },
+  { id: 2, status: 'mislukt', titel: 'B', gearchiveerd: false, agent: 'a', bijgewerkt: '2025-01-01T00:00:00Z' }
 ], 'alle');
 vmSetData(context, context.taken);
-context.renderLijst();
-
-if (context.verborgenIds().length !== 0) {
-  throw new Error('Test 2a: verborgenIds should be empty');
-}
-
-context.voegToeAanVerborgen(1);
-if (context.verborgenIds().length !== 1) {
-  throw new Error('Test 2b: verborgenIds should have 1 entry');
-}
-if (context.verborgenIds()[0] !== '1') {
-  throw new Error('Test 2c: hidden id should be "1", got: ' + context.verborgenIds()[0]);
-}
-
-context.voegToeAanVerborgen(2);
-if (context.verborgenIds().length !== 2) {
-  throw new Error('Test 2d: verborgenIds should have 2 entries');
-}
-
-const nowUnhidden = context.toggleVerborgen(1);
-if (nowUnhidden) {
-  throw new Error('Test 2e: toggleVerborgen(1) should return false');
-}
-if (context.verborgenIds().length !== 1) {
-  throw new Error('Test 2f: verborgenIds should have 1 entry after toggle off');
-}
-
-const nowHidden = context.toggleVerborgen(1);
-if (!nowHidden) {
-  throw new Error('Test 2g: toggleVerborgen(1) should return true');
-}
-if (context.verborgenIds().length !== 2) {
-  throw new Error('Test 2h: verborgenIds should have 2 entries again');
+if (context.gearchiveerdeIds().join(',') !== '1') {
+  throw new Error('Test 2a: gearchiveerdeIds should be "1", got: ' + context.gearchiveerdeIds());
 }
 
 // === Test 3: formatDatum nog in orde ===
