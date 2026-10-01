@@ -488,7 +488,7 @@ function setFilter(filter) {
   activeFilter = filter;
 
   // Update button active state
-  document.querySelectorAll('.filter-btn').forEach(btn => {
+  document.querySelectorAll('[data-filter]').forEach(btn => {
     if (btn.dataset.filter === filter) {
       btn.classList.add('active');
     } else {
@@ -503,7 +503,7 @@ function setFilter(filter) {
 
 document.addEventListener('DOMContentLoaded', () => {
   // Wire up filter buttons
-  document.querySelectorAll('.filter-btn').forEach(btn => {
+  document.querySelectorAll('[data-filter]').forEach(btn => {
     btn.addEventListener('click', () => setFilter(btn.dataset.filter));
   });
 
