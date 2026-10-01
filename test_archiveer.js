@@ -108,7 +108,7 @@ const context = {
     visibilityState: 'visible',
     addEventListener: () => {}
   },
-  window: { addEventListener: () => {} },
+  window: { addEventListener: () => {}, matchMedia: () => ({ matches: false }) },
   navigator: {},
   setInterval: () => {},
   fetch: () => Promise.resolve({ ok: true, json: () => Promise.resolve({ taken: [], eigenaar: 'test' }) }),
