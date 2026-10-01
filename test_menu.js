@@ -128,7 +128,7 @@ const context = {
     },
     addEventListener: () => {}
   },
-  window: { addEventListener: () => {} },
+  window: { addEventListener: () => {}, matchMedia: () => ({ matches: true }) },
   navigator: {},
   setInterval: () => {},
   fetch: () => Promise.resolve({ ok: true, json: () => Promise.resolve({ taken: [], eigenaar: 'test' }) }),
