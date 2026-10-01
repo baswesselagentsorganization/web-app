@@ -12,7 +12,7 @@ function makeElement(tag) {
   const el = {
     className: '',
     textContent: '',
-    style: {},
+    style: { setProperty(k, v) { this[k] = v; } },
     tagName: tag || '',
     children: children,
     _dataset: dataset,

@@ -10,6 +10,9 @@ let activeFilter = 'alle';
 /** Current search text (matched case-insensitively against the title) */
 let zoekTekst = '';
 
+/** Owner filter: 'alle' | 'eigen' */
+let eigenaarFilter = 'alle';
+
 const STATUS_LABELS = {
   nieuw: 'Nieuw',
   gepland: 'Gepland',
@@ -87,6 +90,11 @@ async function laadTaken() {
     }
     const data = await response.json();
     taken = data.taken;
+    // Backward compatibility: if the API does not send "kleuren", treat every task as own
+    const eigenaarKleuren = data.kleuren || {};
+    if (!data.kleuren) {
+      for (const t of taken) { t.eigen = true; }
+    }
     
     document.getElementById('app-titel').textContent = `Taken van ${data.eigenaar}`;
     renderLijst();
@@ -108,7 +116,7 @@ function updateWachtAkkoordTeller() {
   const tellerEl = document.getElementById('wacht-akkoord-teller');
   if (!tellerEl) return;
 
-  const aantal = taken.filter(t => t.status === 'wacht_op_akkoord').length;
+  const aantal = taken.filter(t => t.status === 'wacht_op_akkoord' && t.eigen !== false).length;
   if (aantal > 0) {
     tellerEl.textContent = `wacht op jouw akkoord: ${aantal}`;
     tellerEl.style.display = 'block';
@@ -125,11 +133,12 @@ function updateWachtAkkoordTeller() {
  * @param {string[]} verborgen IDs of archived tasks
  * @returns {Array<any>}
  */
-function filterTaken(lijst, filter, zoek, verborgen) {
+function filterTaken(lijst, filter, zoek, verborgen, eigenaarFilter) {
   const naald = zoek.trim().toLowerCase();
   return lijst.filter(t => {
     if (verborgen.indexOf(String(t.id)) !== -1) return false;
     if (naald && !String(t.titel ?? '').toLowerCase().includes(naald)) return false;
+    if (eigenaarFilter === 'eigen' && t.eigen === false) return false;
     if (filter === 'alle') return true;
     if (filter === 'bezig') return ['nieuw', 'gepland', 'bezig'].includes(t.status);
     if (filter === 'mislukt') return ['mislukt', 'geannuleerd'].includes(t.status);
@@ -142,7 +151,7 @@ function filterTaken(lijst, filter, zoek, verborgen) {
  */
 function renderLijst() {
   const lijst = document.getElementById('taak-lijst');
-  const nietVerborgen = filterTaken(taken, activeFilter, zoekTekst, verborgenIds());
+  const nietVerborgen = filterTaken(taken, activeFilter, zoekTekst, verborgenIds(), eigenaarFilter);
 
   if (nietVerborgen.length === 0) {
     lijst.textContent = '';
@@ -280,6 +289,14 @@ function maakKaart(taak) {
   li.dataset.id = taak.id;
   li.dataset.status = taak.status;
 
+  // Colored left border based on owner color
+  const kleur = taak.kleur ?? '';
+  if (/^#[0-9a-fA-F]{6}$/.test(kleur)) {
+    li.style.setProperty("--eigenaar-kleur", kleur);
+  } else {
+    li.style.setProperty("--eigenaar-kleur", "#6b7280");
+  }
+
   const badge = document.createElement('span');
   badge.className = `status-badge ${taak.status}`;
   badge.textContent = STATUS_LABELS[taak.status] ?? taak.status;
@@ -303,10 +320,20 @@ function maakKaart(taak) {
   li.appendChild(titel);
   li.appendChild(meta);
 
+  // "van [eigenaar]" label for non-owner tasks
+  if (taak.eigen !== true && taak.eigenaar) {
+    const label = document.createElement('span');
+    label.className = 'eigenaar-label';
+    label.textContent = `van ${taak.eigenaar}`;
+    const labelKleur = (taak.kleur && /^#[0-9a-fA-F]{6}$/.test(taak.kleur)) ? taak.kleur : '#6b7280';
+    label.style.color = labelKleur;
+    li.appendChild(label);
+  }
+
   const acties = document.createElement('div');
   acties.className = 'taak-acties';
 
-  if (taak.akkoord) {
+  if (taak.akkoord && taak.eigen !== false) {
 
     const btnAkkoord = document.createElement('button');
     btnAkkoord.className = 'btn btn-akkoord';
@@ -461,6 +488,32 @@ function setFilter(filter) {
 }
 
 /**
+ * Set the owner filter and re-render.
+ * @param {string} filter 'alle' | 'eigen'
+ */
+function setEigenaarFilter(filter) {
+  eigenaarFilter = filter;
+
+  // Persist to localStorage
+  try {
+    localStorage.setItem('taken-eigenaar-filter', filter);
+  } catch {
+    // localStorage unavailable
+  }
+
+  // Update owner filter button active state
+  document.querySelectorAll('.eigenaar-filter-btn').forEach(btn => {
+    if (btn.dataset.eigenaarfilter === filter) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+
+  renderLijst();
+}
+
+/**
  * Detect iframe: add "ingebed" class to <html> when self !== top.
  */
 function ingebedClassZetten() {
@@ -474,6 +527,27 @@ function ingebedClassZetten() {
 document.addEventListener('DOMContentLoaded', () => {
   // Wire up filter buttons
   ingebedClassZetten();
+
+  // Restore owner filter from localStorage
+  try {
+    const saved = localStorage.getItem('taken-eigenaar-filter');
+    if (saved === 'eigen' || saved === 'alle') {
+      eigenaarFilter = saved;
+    }
+  } catch {
+    // localStorage unavailable
+  }
+
+  // Wire up owner filter buttons
+  document.querySelectorAll('.eigenaar-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => setEigenaarFilter(btn.dataset.eigenaarfilter));
+  });
+  // Set initial active state
+  document.querySelectorAll('.eigenaar-filter-btn').forEach(btn => {
+    if (btn.dataset.eigenaarfilter === eigenaarFilter) {
+      btn.classList.add('active');
+    }
+  });
 
   document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', () => setFilter(btn.dataset.filter));
