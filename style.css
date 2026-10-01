@@ -230,6 +230,7 @@ main {
 
 /* Action buttons */
 .taak-acties {
+  justify-content: flex-end;
   display: flex;
   gap: 0.6rem;
 }
