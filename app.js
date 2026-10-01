@@ -7,6 +7,9 @@ let taken = [];
 /** Currently active filter: 'alle' | 'wacht_op_akkoord' | 'bezig' | 'klaar' | 'mislukt' */
 let activeFilter = 'alle';
 
+/** Current search text (matched case-insensitively against the title) */
+let zoekTekst = '';
+
 const STATUS_LABELS = {
   nieuw: 'Nieuw',
   gepland: 'Gepland',
@@ -115,27 +118,37 @@ function updateWachtAkkoordTeller() {
 }
 
 /**
+ * Select the tasks to show: status filter and title search must both match.
+ * @param {Array<any>} lijst
+ * @param {string} filter
+ * @param {string} zoek
+ * @param {string[]} verborgen IDs of archived tasks
+ * @returns {Array<any>}
+ */
+function filterTaken(lijst, filter, zoek, verborgen) {
+  const naald = zoek.trim().toLowerCase();
+  return lijst.filter(t => {
+    if (verborgen.indexOf(String(t.id)) !== -1) return false;
+    if (naald && !String(t.titel ?? '').toLowerCase().includes(naald)) return false;
+    if (filter === 'alle') return true;
+    if (filter === 'bezig') return ['nieuw', 'gepland', 'bezig'].includes(t.status);
+    if (filter === 'mislukt') return ['mislukt', 'geannuleerd'].includes(t.status);
+    return t.status === filter;
+  });
+}
+
+/**
  * Re-render the visible task list based on the active filter.
  */
 function renderLijst() {
   const lijst = document.getElementById('taak-lijst');
-  const zichtbaar = activeFilter === 'alle'
-    ? taken
-    : taken.filter(t => {
-      if (activeFilter === 'bezig') return ['nieuw', 'gepland', 'bezig'].includes(t.status);
-      if (activeFilter === 'mislukt') return ['mislukt', 'geannuleerd'].includes(t.status);
-      return t.status === activeFilter;
-    });
-
-  // Filter out hidden (archived) tasks
-  const ids = verborgenIds();
-  const nietVerborgen = zichtbaar.filter(t => ids.indexOf(String(t.id)) === -1);
+  const nietVerborgen = filterTaken(taken, activeFilter, zoekTekst, verborgenIds());
 
   if (nietVerborgen.length === 0) {
     lijst.textContent = '';
     const li = document.createElement('li');
     li.className = 'status-msg';
-    li.textContent = 'Geen taken in deze categorie.';
+    li.textContent = 'Geen taken gevonden';
     lijst.appendChild(li);
     return;
   }
@@ -320,6 +333,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // Wire up filter buttons
   document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', () => setFilter(btn.dataset.filter));
+  });
+
+  // Wire up search field
+  document.getElementById('taak-zoek')?.addEventListener('input', (e) => {
+    zoekTekst = e.target.value;
+    renderLijst();
   });
 
   // Wire up refresh button
