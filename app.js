@@ -330,8 +330,8 @@ function maakKaart(taak) {
     acties.appendChild(btnAfwijs);
   }
 
-  // Archive button for klaar / mislukt tasks
-  if (['klaar', 'mislukt'].includes(taak.status)) {
+  // Archive button for klaar / mislukt / geannuleerd tasks
+  if (['klaar', 'mislukt', 'geannuleerd'].includes(taak.status)) {
     const btnArchive = document.createElement('button');
     btnArchive.className = 'btn icoon-knop';
     btnArchive.type = 'button';

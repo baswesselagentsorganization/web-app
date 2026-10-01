@@ -131,8 +131,8 @@ function vmSetData(ctx, takenData) {
 }
 
 // === Test 1: archiveerknop zichtbaarheid per status ===
-const archiveableStatuses = ['klaar', 'mislukt'];
-const nonArchiveableStatuses = ['nieuw', 'gepland', 'bezig', 'wacht_op_akkoord', 'geannuleerd'];
+const archiveableStatuses = ['klaar', 'mislukt', 'geannuleerd'];
+const nonArchiveableStatuses = ['nieuw', 'gepland', 'bezig', 'wacht_op_akkoord'];
 
 const taken = [
   { id: 1,  status: 'klaar',       titel: 'Klaar taak',        agent: 'a', bijgewerkt: '2025-01-01T00:00:00Z' },
