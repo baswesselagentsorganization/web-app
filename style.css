@@ -143,7 +143,28 @@ main {
   text-align: center;
 }
 
-/* === Archived toggle button active state === */
+
+/* === Archived toggle button === === */
+.filter-btn-gearchiveerd {
+  flex-shrink: 0;
+  padding: 0.4rem 0.85rem;
+  border: 1.5px solid #333;
+  border-radius: 1.5rem;
+  background: transparent;
+  color: #aaa;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.filter-btn-gearchiveerd:hover,
+.filter-btn-gearchiveerd:focus {
+  border-color: #f5a623;
+  color: #e8e8f0;
+  outline: none;
+}
+
 .filter-btn-gearchiveerd.active {
   background-color: #f5a623;
   border-color: #f5a623;
