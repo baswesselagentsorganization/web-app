@@ -13,6 +13,9 @@ let zoekTekst = '';
 /** Owner filter: 'alle' | 'eigen' */
 let eigenaarFilter = 'alle';
 
+/** Whether archived tasks are shown in the list (default: hidden) */
+let toonGearchiveerd = false;
+
 const STATUS_LABELS = {
   nieuw: 'Nieuw',
   gepland: 'Gepland',
@@ -131,12 +134,14 @@ function updateWachtAkkoordTeller() {
  * @param {string} filter
  * @param {string} zoek
  * @param {string[]} verborgen IDs of archived tasks
+ * @param {string} [eigenaarFilter] 'alle' | 'eigen'
+ * @param {boolean} [toonGearchiveerd] show archived tasks too (default: false)
  * @returns {Array<any>}
  */
-function filterTaken(lijst, filter, zoek, verborgen, eigenaarFilter) {
+function filterTaken(lijst, filter, zoek, verborgen, eigenaarFilter, toonGearchiveerd) {
   const naald = zoek.trim().toLowerCase();
   return lijst.filter(t => {
-    if (verborgen.indexOf(String(t.id)) !== -1) return false;
+    if (!toonGearchiveerd && verborgen.indexOf(String(t.id)) !== -1) return false;
     if (naald && !String(t.titel ?? '').toLowerCase().includes(naald)) return false;
     if (eigenaarFilter === 'eigen' && t.eigen === false) return false;
     if (filter === 'alle') return true;
@@ -151,7 +156,7 @@ function filterTaken(lijst, filter, zoek, verborgen, eigenaarFilter) {
  */
 function renderLijst() {
   const lijst = document.getElementById('taak-lijst');
-  const nietVerborgen = filterTaken(taken, activeFilter, zoekTekst, verborgenIds(), eigenaarFilter);
+  const nietVerborgen = filterTaken(taken, activeFilter, zoekTekst, verborgenIds(), eigenaarFilter, toonGearchiveerd);
 
   if (nietVerborgen.length === 0) {
     lijst.textContent = '';
@@ -362,8 +367,10 @@ function maakKaart(taak) {
     const btnArchive = document.createElement('button');
     btnArchive.className = 'btn icoon-knop';
     btnArchive.type = 'button';
-    btnArchive.title = 'Archiveer';
-    btnArchive.setAttribute('aria-label', 'Archiveer: ' + taak.titel);
+    const isGearchiveerd = verborgenIds().indexOf(String(taak.id)) !== -1;
+    const actie = isGearchiveerd ? 'Dearchiveer' : 'Archiveer';
+    btnArchive.title = actie;
+    btnArchive.setAttribute('aria-label', actie + ': ' + taak.titel);
 
     // Inline SVG: archive (folder with check)
     const svgNS = 'http://www.w3.org/2000/svg';
@@ -379,7 +386,7 @@ function maakKaart(taak) {
     btnArchive.appendChild(svg);
 
     btnArchive.addEventListener('click', () => {
-      voegToeAanVerborgen(taak.id);
+      toggleVerborgen(taak.id);
       renderLijst();
     });
 
@@ -514,6 +521,20 @@ function setEigenaarFilter(filter) {
 }
 
 /**
+ * Show or hide archived tasks and update the toggle button text.
+ * @param {boolean} toon
+ */
+function setToonGearchiveerd(toon) {
+  toonGearchiveerd = toon;
+  const btn = document.getElementById('btn-toon-gearchiveerd');
+  if (btn) {
+    btn.textContent = toon ? 'Verberg gearchiveerd' : 'Toon gearchiveerd';
+    btn.setAttribute('aria-pressed', String(toon));
+  }
+  renderLijst();
+}
+
+/**
  * Detect iframe: add "ingebed" class to <html> when self !== top.
  */
 function ingebedClassZetten() {
@@ -551,6 +572,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', () => setFilter(btn.dataset.filter));
+  });
+
+  // Wire up archived toggle
+  document.getElementById('btn-toon-gearchiveerd')?.addEventListener('click', () => {
+    setToonGearchiveerd(!toonGearchiveerd);
   });
 
   // Wire up search field

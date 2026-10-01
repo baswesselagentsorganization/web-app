@@ -449,3 +449,19 @@ html.ingebed .btn-vernieuwen {
 html.ingebed main {
   padding-top: 3rem;
 }
+
+.btn-toon-gearchiveerd {
+  margin-bottom: 1rem;
+  padding: 0.35rem 0.8rem;
+  border: 1.5px solid #333;
+  border-radius: 1.5rem;
+  background: transparent;
+  color: #aaa;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.btn-toon-gearchiveerd[aria-pressed="true"] {
+  border-color: #4a90d9;
+  color: #e8e8f0;
+}
