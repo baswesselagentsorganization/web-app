@@ -363,10 +363,7 @@ main {
 }
 
 .taak-dropdown {
-  display: none;
-  position: absolute;
-  top: calc(100% + 4px);
-  right: 0;
+  position: fixed;
   background-color: #16213e;
   border: 1px solid #2a2a4a;
   border-radius: 0.5rem;
@@ -375,11 +372,11 @@ main {
   padding: 0.3rem 0;
   z-index: 20;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  display: none;
 }
 
-.taak-dropdown.open {
-  display: block;
-}
+
+
 
 .taak-dropdown li {
   padding: 0.45rem 0.85rem;
@@ -393,10 +390,3 @@ main {
   color: #4a90d9;
 }
 
-/* Desktop: show dropdown on hover */
-@media (hover: hover) {
-  .taak-menu:hover .taak-dropdown,
-  .taak-dropdown:hover {
-    display: block;
-  }
-}
