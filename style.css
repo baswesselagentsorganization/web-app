@@ -347,3 +347,46 @@ main {
   outline: 2px solid #4a90d9;
   outline-offset: 2px;
 }
+
+/* === Task three-dot menu (dropdown) === */
+.taak-menu {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.taak-menu-btn {
+  font-size: 1.1rem;
+  padding: 0.4rem 0.55rem;
+  line-height: 1;
+}
+
+.taak-dropdown {
+  position: fixed;
+  background-color: #16213e;
+  border: 1px solid #2a2a4a;
+  border-radius: 0.5rem;
+  min-width: 130px;
+  list-style: none;
+  padding: 0.3rem 0;
+  z-index: 20;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  display: none;
+}
+
+
+
+
+.taak-dropdown li {
+  padding: 0.45rem 0.85rem;
+  color: #e8e8f0;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.taak-dropdown li:hover {
+  background-color: rgba(74, 144, 217, 0.12);
+  color: #4a90d9;
+}
+

@@ -176,6 +176,104 @@ function formatDatum(waarde) {
  * @param {any} taak
  * @returns {HTMLLIElement}
  */
+/**
+ * Toggle a task's three-dot menu. Only one menu can be open at a time.
+ * @param {HTMLElement} menuEl
+ */
+function openMenu(menuEl) {
+  const dropdown = menuEl.querySelector('.taak-dropdown');
+
+  // Close all open menus first
+  document.querySelectorAll('.taak-dropdown').forEach(d => {
+    d.classList.remove('open');
+    d.style.display = 'none';
+    d.style.top = '';
+    d.style.right = '';
+    d.style.bottom = '';
+    d.style.left = '';
+  });
+
+  // Always show the dropdown
+  dropdown.style.display = 'block';
+
+  // Try to position it; if measurements fail (e.g. SSR/hidden), fall back to CSS defaults
+  if (typeof dropdown.getBoundingClientRect === 'function') {
+    try {
+      const rect = menuEl.getBoundingClientRect();
+      // Use the smaller of innerHeight and clientHeight for robust viewport height
+      const vh = Math.min(window.innerHeight, document.documentElement.clientHeight);
+      const vw = window.innerWidth || document.documentElement.clientWidth;
+      const ddRect = dropdown.getBoundingClientRect();
+
+      // Only position if we got real measurements (non-zero)
+      if (rect.width > 0 && rect.height > 0 && ddRect.width > 0) {
+        // Position to the right of the button
+        let left = rect.right + 4;
+        let top = rect.top;
+
+        // If the dropdown would overflow right, show to the left
+        if (left + ddRect.width > vw) {
+          left = rect.left - ddRect.width - 4;
+        }
+
+        // If the dropdown would overflow bottom, show above the button
+        if (top + ddRect.height > vh) {
+          top = rect.bottom - ddRect.height - 4;
+        }
+
+        dropdown.style.left = left + 'px';
+        dropdown.style.top = top + 'px';
+
+        // Clamp to viewport after positioning
+        const finalRect = dropdown.getBoundingClientRect();
+        if (finalRect.bottom > vh) {
+          dropdown.style.top = Math.max(0, vh - ddRect.height) + 'px';
+        }
+        if (finalRect.left < 0) {
+          dropdown.style.left = '4px';
+        }
+      }
+    } catch (_) {
+      // Measurement failed; keep CSS default positioning
+    }
+  }
+
+  dropdown.classList.add('open');
+}
+
+function closeMenu(dropdown) {
+  dropdown.classList.remove('open');
+  dropdown.style.display = '';
+  dropdown.style.top = '';
+  dropdown.style.right = '';
+  dropdown.style.bottom = '';
+  dropdown.style.left = '';
+}
+
+function toggleMenu(menuEl) {
+  const dropdown = menuEl.querySelector('.taak-dropdown');
+  if (!dropdown) return;
+  const isOpen = dropdown.classList && dropdown.classList.contains('open');
+
+  if (isOpen) {
+    closeMenu(dropdown);
+  } else {
+    openMenu(menuEl);
+  }
+}
+
+/**
+ * Close all open menus.
+ */
+function closeAllMenus() {
+  document.querySelectorAll('.taak-dropdown.open').forEach(d => {
+    d.classList.remove('open');
+    d.style.display = 'none';
+    d.style.top = '';
+    d.style.left = '';
+  });
+}
+
 function maakKaart(taak) {
   const li = document.createElement('li');
   li.className = 'taak-kaart';
@@ -205,11 +303,10 @@ function maakKaart(taak) {
   li.appendChild(titel);
   li.appendChild(meta);
 
-  let acties = null;
+  const acties = document.createElement('div');
+  acties.className = 'taak-acties';
 
   if (taak.akkoord) {
-    acties = document.createElement('div');
-    acties.className = 'taak-acties';
 
     const btnAkkoord = document.createElement('button');
     btnAkkoord.className = 'btn btn-akkoord';
@@ -235,11 +332,6 @@ function maakKaart(taak) {
 
   // Archive button for klaar / mislukt tasks
   if (['klaar', 'mislukt'].includes(taak.status)) {
-    if (!acties) {
-      acties = document.createElement('div');
-      acties.className = 'taak-acties';
-    }
-
     const btnArchive = document.createElement('button');
     btnArchive.className = 'btn icoon-knop';
     btnArchive.type = 'button';
@@ -267,9 +359,50 @@ function maakKaart(taak) {
     acties.appendChild(btnArchive);
   }
 
-  if (acties) {
-    li.appendChild(acties);
+  // Three-dot menu button (always present)
+  const menuWrapper = document.createElement('div');
+  menuWrapper.className = 'taak-menu';
+
+  const menuBtn = document.createElement('button');
+  menuBtn.className = 'icoon-knop taak-menu-btn';
+  menuBtn.type = 'button';
+  menuBtn.textContent = '\u22EE';
+  menuBtn.setAttribute('aria-label', 'Meer opties');
+  menuBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleMenu(menuWrapper);
+  });
+
+  // Desktop hover: only on devices with hover capability
+  if (window.matchMedia('(hover: hover)').matches) {
+    menuBtn.addEventListener('mouseenter', () => openMenu(menuWrapper));
+    menuBtn.addEventListener('mouseleave', (e) => {
+      const dropdown = menuWrapper.querySelector('.taak-dropdown');
+      if (!dropdown.classList.contains('open')) return;
+      // Close only if mouse leaves both button and dropdown
+      const btnRect = menuBtn.getBoundingClientRect();
+      const ddRect = dropdown.getBoundingClientRect();
+      const x = e.clientX, y = e.clientY;
+      const inBtn = x >= btnRect.left && x <= btnRect.right && y >= btnRect.top && y <= btnRect.bottom;
+      const inDd = x >= ddRect.left && x <= ddRect.right && y >= ddRect.top && y <= ddRect.bottom;
+      if (!inBtn && !inDd) closeMenu(dropdown);
+    });
   }
+
+  const dropdown = document.createElement('ul');
+  dropdown.className = 'taak-dropdown';
+
+  for (const label of ['Optie 1', 'Optie 2', 'Optie 3']) {
+    const optLi = document.createElement('li');
+    optLi.textContent = label;
+    dropdown.appendChild(optLi);
+  }
+
+  menuWrapper.appendChild(menuBtn);
+  menuWrapper.appendChild(dropdown);
+  acties.appendChild(menuWrapper);
+
+  li.appendChild(acties);
 
   return li;
 }
@@ -346,10 +479,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
   laadTaken();
 
+  // Close menus when clicking outside
+  document.addEventListener('click', closeAllMenus);
+
+  // Also close menus on touchend outside any .taak-menu (handles touch tap on mobile)
+  document.addEventListener('touchend', (e) => {
+    const menus = document.querySelectorAll('.taak-menu');
+    let clickedInside = false;
+    for (const menu of menus) {
+      if (menu.contains(e.target)) {
+        clickedInside = true;
+        break;
+      }
+    }
+    if (!clickedInside) {
+      closeAllMenus();
+    }
+  });
+
+  // Also close menus on pointerdown outside any .taak-menu (handles touch tap)
+  document.addEventListener('pointerdown', (e) => {
+    const menus = document.querySelectorAll('.taak-menu');
+    let clickedInside = false;
+    for (const menu of menus) {
+      if (menu.contains(e.target)) {
+        clickedInside = true;
+        break;
+      }
+    }
+    if (!clickedInside) {
+      closeAllMenus();
+    }
+  });
+
   // Auto-refresh every 30 seconds if page is visible
   setInterval(() => {
     if (document.visibilityState === 'visible') {
       laadTaken();
+
     }
   }, 30000);
 });
