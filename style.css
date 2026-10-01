@@ -390,3 +390,19 @@ main {
   color: #4a90d9;
 }
 
+
+/* === Embedded in iframe (hub shell) === */
+html.ingebed .app-header {
+  display: none;
+}
+
+html.ingebed .btn-vernieuwen {
+  position: fixed;
+  top: 0.75rem;
+  right: 1rem;
+  z-index: 200;
+}
+
+html.ingebed main {
+  padding-top: 3rem;
+}

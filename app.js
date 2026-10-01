@@ -460,10 +460,21 @@ function setFilter(filter) {
   renderLijst();
 }
 
+/**
+ * Detect iframe: add "ingebed" class to <html> when self !== top.
+ */
+function ingebedClassZetten() {
+  if (window.self !== window.top) {
+    document.documentElement.classList.add('ingebed');
+  }
+}
+
 // === Initialise ===
 
 document.addEventListener('DOMContentLoaded', () => {
   // Wire up filter buttons
+  ingebedClassZetten();
+
   document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', () => setFilter(btn.dataset.filter));
   });
