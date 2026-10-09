@@ -373,26 +373,77 @@ function maakKaart(taak) {
 
   if (taak.akkoord) {
 
+    const akk = taak.akkoord;
+    const vragen = typeof akk.vragen === 'number' ? akk.vragen : 0;
+    const ja = akk.ja;
+    const risico = akk.risico;
+
+    // Show akkoord-zin line if ja and risico are present
+    if (ja !== undefined && ja !== null && risico !== undefined && risico !== null) {
+      const zinEl = document.createElement('div');
+      zinEl.className = 'akkoord-zin';
+      zinEl.textContent = `Ja = ${ja}; risico: ${risico}.`;
+      acties.appendChild(zinEl);
+    }
+
     const btnAkkoord = document.createElement('button');
     btnAkkoord.className = 'btn btn-akkoord';
     btnAkkoord.type = 'button';
-    btnAkkoord.textContent = '\u2713 Akkoord';
+    const akkoordLabel = vragen > 1 ? `✓ Akkoord (${vragen} vragen)` : '✓ Akkoord';
+    btnAkkoord.textContent = akkoordLabel;
     btnAkkoord.setAttribute('aria-label', `Akkoord geven aan: ${taak.titel}`);
-    btnAkkoord.addEventListener('click', () => stuurAkkoord(taak.akkoord.id, 'akkoord', btnAkkoord, btnAfwijs));
 
     const btnAfwijs = document.createElement('button');
     btnAfwijs.className = 'btn btn-afwijs';
     btnAfwijs.type = 'button';
-    btnAfwijs.textContent = '\u2755 Afwijzen';
+    const afwijsLabel = vragen > 1 ? `❕ Afwijzen (${vragen} vragen)` : '❕ Afwijzen';
+    btnAfwijs.textContent = afwijsLabel;
     btnAfwijs.setAttribute('aria-label', `Afwijzen: ${taak.titel}`);
+
+    async function stuurBesluit(besluit) {
+      btnAkkoord.disabled = true;
+      btnAfwijs.disabled = true;
+      try {
+        const url = vragen > 1 ? `/api/kaarten/${taak.id}` : `/api/akkoorden/${akk.id}`;
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Hub': 'web'
+          },
+          body: JSON.stringify({ besluit })
+        });
+        if (!response.ok) {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.fout || `HTTP fout ${response.status}`);
+        }
+        await laadTaken();
+      } catch (err) {
+        alert(`Actie mislukt: ${err.message}`);
+        btnAkkoord.disabled = false;
+        btnAfwijs.disabled = false;
+      }
+    }
+
+    btnAkkoord.addEventListener('click', () => stuurBesluit('akkoord'));
     btnAfwijs.addEventListener('click', () => {
       if (window.confirm('Weet je zeker dat je deze taak wilt afwijzen?')) {
-        stuurAkkoord(taak.akkoord.id, 'afwijzen', btnAkkoord, btnAfwijs);
+        stuurBesluit('afwijzen');
       }
     });
 
     acties.appendChild(btnAkkoord);
     acties.appendChild(btnAfwijs);
+
+    const btnDetails = document.createElement('button');
+    btnDetails.className = 'btn btn-details';
+    btnDetails.type = 'button';
+    btnDetails.textContent = 'Details';
+    btnDetails.setAttribute('aria-label', `Details: ${taak.titel}`);
+    btnDetails.addEventListener('click', () => {
+      window.parent.location.hash = '#chat';
+    });
+    acties.appendChild(btnDetails);
   }
 
   // Archive button for klaar / mislukt / geannuleerd tasks
@@ -458,10 +509,23 @@ function maakKaart(taak) {
   const dropdown = document.createElement('ul');
   dropdown.className = 'taak-dropdown';
 
-  for (const label of ['Optie 1', 'Optie 2', 'Optie 3']) {
-    const optLi = document.createElement('li');
-    optLi.textContent = label;
-    dropdown.appendChild(optLi);
+  const actieveStatussen = ['nieuw', 'gepland', 'bezig', 'wacht_op_akkoord'];
+  if (actieveStatussen.includes(taak.status)) {
+    const annuleerLi = document.createElement('li');
+    annuleerLi.textContent = 'Annuleren';
+    annuleerLi.style.cursor = 'pointer';
+    annuleerLi.addEventListener('click', (e) => {
+      e.stopPropagation();
+      stuurAnnuleren(taak.id);
+      closeAllMenus();
+    });
+    dropdown.appendChild(annuleerLi);
+  } else {
+    const geenLi = document.createElement('li');
+    geenLi.textContent = 'Geen acties';
+    geenLi.style.color = '#666';
+    geenLi.style.cursor = 'default';
+    dropdown.appendChild(geenLi);
   }
 
   menuWrapper.appendChild(menuBtn);
@@ -504,6 +568,31 @@ async function stuurAkkoord(akkoordId, besluit, btn1, btn2) {
     alert(`Actie mislukt: ${err.message}`);
     btn1.disabled = false;
     btn2.disabled = false;
+  }
+}
+
+/**
+ * Cancel a task. Prompts confirmation, then POSTs to the API.
+ * @param {string | number} taakId
+ */
+async function stuurAnnuleren(taakId) {
+  if (!window.confirm(`Taak ${taakId} annuleren? Een lopende agent stopt en er wordt niets gepusht.`)) return;
+  try {
+    const response = await fetch(`/api/taken/${taakId}/annuleren`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Hub': 'web'
+      },
+      body: '{}'
+    });
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.fout || `HTTP fout ${response.status}`);
+    }
+    await laadTaken();
+  } catch (err) {
+    alert(`Annuleren mislukt: ${err.message}`);
   }
 }
 
