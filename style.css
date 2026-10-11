@@ -293,6 +293,8 @@ main {
   justify-content: flex-end;
   display: flex;
   gap: 0.6rem;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
 .btn {
@@ -341,6 +343,14 @@ main {
 
 .btn-afwijs:hover:not(:disabled) {
   opacity: 0.88;
+}
+
+.akkoord-zin {
+  flex: 1 1 100%;
+  font-size: 0.85rem;
+  color: #c9d1e0;
+  line-height: 1.35;
+  margin-bottom: 0.2rem;
 }
 
 /* === Responsive: larger screens === */
