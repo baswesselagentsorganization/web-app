@@ -252,14 +252,7 @@ function openMenu(menuEl) {
   const dropdown = menuEl.querySelector('.taak-dropdown');
 
   // Close all open menus first
-  document.querySelectorAll('.taak-dropdown').forEach(d => {
-    d.classList.remove('open');
-    d.style.display = 'none';
-    d.style.top = '';
-    d.style.right = '';
-    d.style.bottom = '';
-    d.style.left = '';
-  });
+  closeAllMenus();
 
   // Always show the dropdown
   dropdown.style.display = 'block';
@@ -307,6 +300,8 @@ function openMenu(menuEl) {
   }
 
   dropdown.classList.add('open');
+  const menuBtn = menuEl.querySelector('.taak-menu-btn');
+  menuBtn.setAttribute('aria-expanded', 'true');
 }
 
 function closeMenu(dropdown) {
@@ -316,6 +311,8 @@ function closeMenu(dropdown) {
   dropdown.style.right = '';
   dropdown.style.bottom = '';
   dropdown.style.left = '';
+  const menuBtn = dropdown._menuButton;
+  if (menuBtn) menuBtn.setAttribute('aria-expanded', 'false');
 }
 
 function toggleMenu(menuEl) {
@@ -335,10 +332,7 @@ function toggleMenu(menuEl) {
  */
 function closeAllMenus() {
   document.querySelectorAll('.taak-dropdown.open').forEach(d => {
-    d.classList.remove('open');
-    d.style.display = 'none';
-    d.style.top = '';
-    d.style.left = '';
+    closeMenu(d);
   });
 }
 
@@ -495,7 +489,12 @@ function maakKaart(taak) {
     svg.setAttribute('stroke', 'currentColor');
     svg.setAttribute('stroke-width', '1.5');
     svg.setAttribute('aria-hidden', 'true');
-    svg.innerHTML = '<path d="M1 4.5A1.5 1.5 0 0 1 2.5 3h3.172a1.5 1.5 0 0 1 1.06.44l.824.82a1.5 1.5 0 0 0 1.06.44h3.474A1.5 1.5 0 0 1 12.5 6.5v6a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 1 12.5v-8z"/><path d="m4 9 2 2 4-4"/>';
+    const folderPath = document.createElementNS(svgNS, 'path');
+    folderPath.setAttribute('d', 'M1 4.5A1.5 1.5 0 0 1 2.5 3h3.172a1.5 1.5 0 0 1 1.06.44l.824.82a1.5 1.5 0 0 0 1.06.44h3.474A1.5 1.5 0 0 1 12.5 6.5v6a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 1 12.5v-8z');
+    const checkPath = document.createElementNS(svgNS, 'path');
+    checkPath.setAttribute('d', 'm4 9 2 2 4-4');
+    svg.appendChild(folderPath);
+    svg.appendChild(checkPath);
     btnArchive.appendChild(svg);
 
     btnArchive.addEventListener('click', () => {
@@ -514,6 +513,10 @@ function maakKaart(taak) {
   menuBtn.type = 'button';
   menuBtn.textContent = '\u22EE';
   menuBtn.setAttribute('aria-label', 'Meer opties');
+  menuBtn.setAttribute('aria-haspopup', 'menu');
+  menuBtn.setAttribute('aria-expanded', 'false');
+  const dropdownId = `taak-menu-${taak.id}`;
+  menuBtn.setAttribute('aria-controls', dropdownId);
   menuBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     toggleMenu(menuWrapper);
@@ -535,27 +538,99 @@ function maakKaart(taak) {
     });
   }
 
-  const dropdown = document.createElement('ul');
+  const dropdown = document.createElement('div');
   dropdown.className = 'taak-dropdown';
+  dropdown.id = dropdownId;
+  dropdown.setAttribute('role', 'menu');
+  dropdown._menuButton = menuBtn;
+
+  function maakMenuItem(label, disabled, action) {
+    const item = document.createElement('button');
+    item.type = 'button';
+    item.setAttribute('role', 'menuitem');
+    item.textContent = label;
+    if (disabled) {
+      item.setAttribute('aria-disabled', 'true');
+    }
+    item.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (disabled) return;
+      action();
+    });
+    item.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        if (!disabled) item.click();
+      }
+    });
+    return item;
+  }
 
   const actieveStatussen = ['nieuw', 'gepland', 'bezig', 'wacht_op_akkoord'];
   if (actieveStatussen.includes(taak.status)) {
-    const annuleerLi = document.createElement('li');
-    annuleerLi.textContent = 'Annuleren';
-    annuleerLi.style.cursor = 'pointer';
-    annuleerLi.addEventListener('click', (e) => {
-      e.stopPropagation();
+    const annuleerItem = maakMenuItem('Annuleren', false, () => {
       stuurAnnuleren(taak.id);
       closeAllMenus();
     });
-    dropdown.appendChild(annuleerLi);
+    dropdown.appendChild(annuleerItem);
   } else {
-    const geenLi = document.createElement('li');
-    geenLi.textContent = 'Geen acties';
-    geenLi.style.color = '#666';
-    geenLi.style.cursor = 'default';
-    dropdown.appendChild(geenLi);
+    dropdown.appendChild(maakMenuItem('Geen acties', true, () => {}));
   }
+
+  function menuItems() {
+    return Array.from(dropdown.children);
+  }
+
+  function focusItem(index) {
+    const items = menuItems();
+    if (items.length) items[(index + items.length) % items.length].focus();
+  }
+
+  menuBtn.addEventListener('keydown', (e) => {
+    if (e.key === 'Tab' && dropdown.classList.contains('open')) {
+      closeMenu(dropdown);
+    } else if (e.key === 'Escape' && dropdown.classList.contains('open')) {
+      e.preventDefault();
+      closeMenu(dropdown);
+      menuBtn.focus();
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      if (!dropdown.classList.contains('open')) openMenu(menuWrapper);
+      focusItem(0);
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (!dropdown.classList.contains('open')) openMenu(menuWrapper);
+      focusItem(0);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!dropdown.classList.contains('open')) openMenu(menuWrapper);
+      focusItem(-1);
+    }
+  });
+
+  dropdown.addEventListener('keydown', (e) => {
+    const items = menuItems();
+    const current = items.indexOf(document.activeElement);
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      focusItem(current + 1);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      focusItem(current - 1);
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      focusItem(0);
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      focusItem(-1);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      closeMenu(dropdown);
+      menuBtn.focus();
+    } else if (e.key === 'Tab') {
+      closeMenu(dropdown);
+    }
+  });
 
   menuWrapper.appendChild(menuBtn);
   menuWrapper.appendChild(dropdown);

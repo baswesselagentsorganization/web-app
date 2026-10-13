@@ -7,9 +7,9 @@ De takenpagina van Agenthub: een PWA (HTML, CSS en JavaScript, zonder framework)
 - `index.html`: de enige pagina (taaklijst, filters, zoekveld).
 - `app.js`: alle logica (laden van `/api/taken`, filters, zoeken, akkoordkaart, ⋮-menu met Annuleren, archief).
 - `style.css`: donker thema, responsive.
-- `sw.js`: service worker die de app shell cachet (`takenbeheer-v4`).
+- `sw.js`: service worker die de app shell cachet (`takenbeheer-v5`).
 - `manifest.json` en `icons/`: PWA-manifest en iconen.
-- `test_*.js`: 10 testbestanden (Node.js met de `vm`-module, zonder dependencies).
+- `test_*.js`: 11 testbestanden (Node.js met de `vm`-module, zonder dependencies).
 
 ## Testen
 `for f in test_*.js; do node "$f" || exit $?; done` (geen package.json, geen testrunner; elk bestand test zichzelf met `assert`).
@@ -28,3 +28,4 @@ Na een merge in `main` rolt Agenthub (de hub op agentserver) precies die commit 
 - Lokaal testen vraagt een nagebootste API (de tests hebben een fake `fetch`).
 - Verander je de app shell, verhoog dan de cacheversie in `sw.js`, anders zien gebruikers een oude versie.
 - Er is geen `.gitignore`: commit geen build-artefacten of testuitvoer.
+- Het ⋮-menu ondersteunt toetsenbordbediening: Enter/spatie openen, pijltjes/Home/End verplaatsen focus, Escape sluit en herstelt focus, Tab sluit.

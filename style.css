@@ -437,18 +437,6 @@ main {
 
 
 
-.taak-dropdown li {
-  padding: 0.45rem 0.85rem;
-  color: #e8e8f0;
-  font-size: 0.85rem;
-  cursor: pointer;
-}
-
-.taak-dropdown li:hover {
-  background-color: rgba(74, 144, 217, 0.12);
-  color: #4a90d9;
-}
-
 
 /* === Embedded in iframe (hub shell) === */
 html.ingebed .app-header {
@@ -480,4 +468,33 @@ html.ingebed main {
 .btn-toon-gearchiveerd[aria-pressed="true"] {
   border-color: #4a90d9;
   color: #e8e8f0;
+}
+
+.taak-menu-btn:focus-visible,
+.taak-dropdown button:focus-visible {
+  outline: 2px solid #8ab4f8;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px rgba(138, 180, 248, 0.22);
+}
+
+.taak-dropdown button {
+  display: block;
+  width: 100%;
+  padding: 0.45rem 0.85rem;
+  border: 0;
+  background: transparent;
+  color: #e8e8f0;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.taak-dropdown button:hover:not([aria-disabled="true"]) {
+  background-color: rgba(74, 144, 217, 0.12);
+  color: #4a90d9;
+}
+
+.taak-dropdown button[aria-disabled="true"] {
+  color: #888;
+  cursor: default;
 }
