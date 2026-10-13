@@ -1,7 +1,7 @@
 // sw.js — Service Worker for offline caching
 // Caches app shell on install; serves cached files when offline.
 
-const CACHE_NAME = 'takenbeheer-v4';
+const CACHE_NAME = 'takenbeheer-v5';
 
 const APP_SHELL = [
   './',
