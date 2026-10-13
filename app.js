@@ -217,6 +217,27 @@ function formatDatum(waarde) {
   return isNaN(datum.getTime()) ? waarde : datum.toLocaleString('nl-NL', { dateStyle: 'short', timeStyle: 'short' });
 }
 
+/** Format elapsed time since a task started. @param {string} startIso @param {Date|string|number} [nu] @returns {string} */
+function formatLooptijd(startIso, nu = new Date()) {
+  if (!startIso) return '';
+  const start = new Date(startIso).getTime();
+  const current = new Date(nu).getTime();
+  if (!Number.isFinite(start) || !Number.isFinite(current)) return '';
+  const minuten = Math.floor(Math.max(0, current - start) / 60000);
+  if (minuten < 1) return '<1 min';
+  if (minuten < 60) return `${minuten} min`;
+  const uren = Math.floor(minuten / 60);
+  const rest = minuten % 60;
+  return rest === 0 ? `${uren} u` : `${uren} u ${rest} min`;
+}
+
+/** Update existing duration labels without rebuilding cards or touching menus. */
+function verversLooptijden(nu = new Date()) {
+  document.querySelectorAll('.taak-looptijd').forEach(el => {
+    el.textContent = `Bezig: ${formatLooptijd(el.dataset.start, nu)}`;
+  });
+}
+
 
 /**
  * Build a task card element for the given task.
@@ -353,6 +374,14 @@ function maakKaart(taak) {
     metaText += ` • Repo: ${taak.repo}`;
   }
   meta.textContent = metaText;
+
+  if (taak.status === 'bezig' && taak.bezig_sinds) {
+    const looptijd = document.createElement('span');
+    looptijd.className = 'taak-looptijd';
+    looptijd.dataset.start = taak.bezig_sinds;
+    looptijd.textContent = `Bezig: ${formatLooptijd(taak.bezig_sinds)}`;
+    meta.appendChild(looptijd);
+  }
 
   li.appendChild(badge);
   li.appendChild(titel);
@@ -751,6 +780,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     }
   }, 30000);
+
+  setInterval(() => verversLooptijden(), 60000);
 });
 
 // === Service Worker registration ===
