@@ -384,6 +384,19 @@ function maakKaart(taak) {
   }
 
   li.appendChild(badge);
+
+  // Motor label: show the agent motor as a small badge
+  const motor = taak.motor;
+  if (motor) {
+    const motorEl = document.createElement('span');
+    motorEl.className = 'motor-label';
+    const known = motor.toLowerCase();
+    if (known === 'codex' || known === 'gemini' || known === 'lokaal' || known === 'claude') {
+      motorEl.className += ' motor-label-' + known;
+    }
+    motorEl.textContent = motor;
+    li.appendChild(motorEl);
+  }
   li.appendChild(titel);
   li.appendChild(meta);
 
