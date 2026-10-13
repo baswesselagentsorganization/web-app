@@ -288,6 +288,12 @@ main {
   margin-bottom: 0.75rem;
 }
 
+.taak-looptijd {
+  display: inline-block;
+  margin-left: 0.5rem;
+  color: #a8c7fa;
+}
+
 /* Action buttons */
 .taak-acties {
   justify-content: flex-end;
