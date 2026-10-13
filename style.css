@@ -481,3 +481,37 @@ html.ingebed main {
   border-color: #4a90d9;
   color: #e8e8f0;
 }
+
+/* === Motor label === */
+.motor-label {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: lowercase;
+  letter-spacing: 0.03em;
+  padding: 0.1rem 0.4rem;
+  border-radius: 0.25rem;
+  background-color: rgba(74, 144, 217, 0.12);
+  color: #8899aa;
+  margin-bottom: 0.4rem;
+}
+
+.motor-label-codex {
+  background-color: rgba(74, 144, 217, 0.15);
+  color: #4a90d9;
+}
+
+.motor-label-gemini {
+  background-color: rgba(255, 193, 7, 0.12);
+  color: #ffc107;
+}
+
+.motor-label-lokaal {
+  background-color: rgba(39, 174, 96, 0.12);
+  color: #27ae60;
+}
+
+.motor-label-claude {
+  background-color: rgba(175, 82, 222, 0.12);
+  color: #af52de;
+}
