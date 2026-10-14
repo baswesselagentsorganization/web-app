@@ -7,9 +7,9 @@ De takenpagina van Agenthub: een PWA (HTML, CSS en JavaScript, zonder framework)
 - `index.html`: de enige pagina (taaklijst, filters, zoekveld).
 - `app.js`: alle logica (laden van `/api/taken`, filters, zoeken, akkoordkaart, ⋮-menu met Annuleren, archief).
 - `style.css`: donker thema, responsive.
-- `sw.js`: service worker die de app shell cachet (`takenbeheer-v5`).
+- `sw.js`: service worker die de app shell cachet (`takenbeheer-v6`).
 - `manifest.json` en `icons/`: PWA-manifest en iconen.
-- `test_*.js`: 11 testbestanden (Node.js met de `vm`-module, zonder dependencies).
+- `test_*.js`: 12 testbestanden (Node.js met de `vm`-module, zonder dependencies).
 
 ## Testen
 `for f in test_*.js; do node "$f" || exit $?; done` (geen package.json, geen testrunner; elk bestand test zichzelf met `assert`).
@@ -22,6 +22,7 @@ Na een merge in `main` rolt Agenthub (de hub op agentserver) precies die commit 
 - camelCase voor variabelen en functies, kebab-case voor CSS-klassen; JSDoc-annotaties; `async/await` voor API-aanroepen.
 - Geen dependencies, geen bundler, geen framework. Tekst uit de API altijd met `textContent`, nooit met `innerHTML`.
 - Looptijd wordt alleen getoond voor `bezig`-taken met API-veld `bezig_sinds`; `bijgewerkt` is geen starttijd.
+- De knop Details klapt `akkoord.details` in de kaart uit als de API een niet-lege string stuurt. De open status blijft tijdens opnieuw renderen bewaard; ontbrekende of lege details sturen door naar `#chat`.
 
 ## Valkuilen
 - De tests draaien in Node.js met nagebootste `document` en `window`; ze raken geen browser.
