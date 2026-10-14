@@ -19,6 +19,9 @@ let openAkkoorden = null;
 /** Whether archived tasks are shown in the list (default: hidden) */
 let toonGearchiveerd = false;
 
+/** Task IDs whose approval details are expanded. */
+const openAkkoordDetails = new Set();
+
 const STATUS_LABELS = {
   nieuw: 'Nieuw',
   gepland: 'Gepland',
@@ -393,6 +396,7 @@ function maakKaart(taak) {
 
   const acties = document.createElement('div');
   acties.className = 'taak-acties';
+  let akkoordDetailsElement = null;
 
   if (taak.akkoord) {
 
@@ -463,10 +467,31 @@ function maakKaart(taak) {
     btnDetails.type = 'button';
     btnDetails.textContent = 'Details';
     btnDetails.setAttribute('aria-label', `Details: ${taak.titel}`);
-    btnDetails.addEventListener('click', () => {
-      window.parent.location.hash = '#chat';
-    });
-    acties.appendChild(btnDetails);
+    const detailsTekst = akk.details;
+    if (typeof detailsTekst === 'string' && detailsTekst.length > 0) {
+      const taakId = String(taak.id);
+      const detailsId = `taak-details-${taakId}`;
+      const details = document.createElement('div');
+      details.className = 'taak-details';
+      details.id = detailsId;
+      details.textContent = detailsTekst;
+      details.hidden = !openAkkoordDetails.has(taakId);
+      akkoordDetailsElement = details;
+      btnDetails.setAttribute('aria-controls', detailsId);
+      btnDetails.setAttribute('aria-expanded', String(!details.hidden));
+      btnDetails.addEventListener('click', () => {
+        details.hidden = !details.hidden;
+        btnDetails.setAttribute('aria-expanded', String(!details.hidden));
+        if (details.hidden) openAkkoordDetails.delete(taakId);
+        else openAkkoordDetails.add(taakId);
+      });
+      acties.appendChild(btnDetails);
+    } else {
+      btnDetails.addEventListener('click', () => {
+        window.parent.location.hash = '#chat';
+      });
+      acties.appendChild(btnDetails);
+    }
   }
 
   // Archive button for klaar / mislukt / geannuleerd tasks
@@ -637,6 +662,7 @@ function maakKaart(taak) {
   acties.appendChild(menuWrapper);
 
   li.appendChild(acties);
+  if (akkoordDetailsElement) li.appendChild(akkoordDetailsElement);
 
   return li;
 }

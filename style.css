@@ -359,6 +359,23 @@ main {
   margin-bottom: 0.2rem;
 }
 
+.taak-details {
+  flex: 1 1 100%;
+  max-height: 16rem;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  background: #1d2430;
+  color: #d7deeb;
+  font-size: 0.875rem;
+}
+
+.taak-details[hidden] {
+  display: none;
+}
+
 /* === Responsive: larger screens === */
 @media (min-width: 480px) {
   .app-header h1 {
