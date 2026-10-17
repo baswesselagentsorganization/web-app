@@ -21,6 +21,8 @@ let toonGearchiveerd = false;
 
 /** Task IDs whose approval details are expanded. */
 const openAkkoordDetails = new Set();
+/** Task IDs whose failure/cancellation details are expanded. */
+const openTaakDetails = new Set();
 
 const STATUS_LABELS = {
   nieuw: 'Nieuw',
@@ -382,6 +384,15 @@ function maakKaart(taak) {
 
   li.appendChild(badge);
   li.appendChild(titel);
+  if (taak.herstart_van != null || taak.plan != null) {
+    const extra = document.createElement('small');
+    extra.className = 'taak-submeta';
+    const regels = [];
+    if (taak.herstart_van != null) regels.push(`opnieuw gestart uit taak ${taak.herstart_van}`);
+    if (taak.plan != null) regels.push(`plan: ${taak.plan}`);
+    extra.textContent = regels.join(' • ');
+    li.appendChild(extra);
+  }
   li.appendChild(meta);
 
   // "van [eigenaar]" label for non-owner tasks
@@ -397,6 +408,31 @@ function maakKaart(taak) {
   const acties = document.createElement('div');
   acties.className = 'taak-acties';
   let akkoordDetailsElement = null;
+  let taakDetailsElement = null;
+
+  if (typeof taak.details === 'string' && taak.details.length > 0) {
+    const taakId = String(taak.id);
+    const detailsId = `taak-mislukt-details-${taakId}`;
+    const btnDetails = document.createElement('button');
+    btnDetails.className = 'btn btn-details';
+    btnDetails.type = 'button';
+    btnDetails.textContent = 'Details';
+    btnDetails.setAttribute('aria-controls', detailsId);
+    const details = document.createElement('div');
+    details.className = 'taak-details';
+    details.id = detailsId;
+    details.textContent = taak.details;
+    details.hidden = !openTaakDetails.has(taakId);
+    btnDetails.setAttribute('aria-expanded', String(!details.hidden));
+    btnDetails.addEventListener('click', () => {
+      details.hidden = !details.hidden;
+      btnDetails.setAttribute('aria-expanded', String(!details.hidden));
+      if (details.hidden) openTaakDetails.delete(taakId);
+      else openTaakDetails.add(taakId);
+    });
+    acties.appendChild(btnDetails);
+    taakDetailsElement = details;
+  }
 
   if (taak.akkoord) {
 
@@ -663,6 +699,7 @@ function maakKaart(taak) {
 
   li.appendChild(acties);
   if (akkoordDetailsElement) li.appendChild(akkoordDetailsElement);
+  if (taakDetailsElement) li.appendChild(taakDetailsElement);
 
   return li;
 }
