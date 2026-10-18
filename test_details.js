@@ -47,7 +47,9 @@ vm.runInContext(fs.readFileSync('app.js', 'utf8'), context);
 const detailText = 'Eerste regel\nTweede regel <script>niet uitvoeren</script>';
 const tasks = [
   { id: 'met-details', status: 'wacht_op_akkoord', titel: 'Taak met details', agent: 'test', bijgewerkt: '2025-01-01', akkoord: { id: 1, details: detailText } },
-  { id: 'zonder-details', status: 'wacht_op_akkoord', titel: 'Taak zonder details', agent: 'test', bijgewerkt: '2025-01-01', akkoord: { id: 2 } }
+  { id: 'zonder-details', status: 'wacht_op_akkoord', titel: 'Taak zonder details', agent: 'test', bijgewerkt: '2025-01-01', akkoord: { id: 2 } },
+  { id: 'mislukt-met-details', status: 'mislukt', titel: 'Mislukte taak', agent: 'test', bijgewerkt: '2025-01-01', details: detailText, herstart_van: 42, plan: 'nachtplan' },
+  { id: 'mislukt-zonder-details', status: 'mislukt', titel: 'Oude API taak', agent: 'test', bijgewerkt: '2025-01-01' }
 ];
 vm.runInContext(`taken = ${JSON.stringify(tasks)}; activeFilter = 'alle';`, context);
 function find(node, className) {
@@ -83,6 +85,21 @@ button = detailButton('met-details');
 details = find(card('met-details'), 'taak-details');
 assert.equal(button.getAttribute('aria-expanded'), 'true', 'expanded state survives list rendering');
 assert.equal(details.hidden, false);
+
+const failedButton = detailButton('mislukt-met-details');
+let failedDetails = find(card('mislukt-met-details'), 'taak-details');
+assert(failedButton, 'failed task with details has a Details button');
+assert(failedDetails, 'failed task details block is present');
+assert.equal(failedButton.getAttribute('aria-expanded'), 'false');
+failedButton.click();
+assert.equal(failedButton.getAttribute('aria-expanded'), 'true');
+assert.equal(failedDetails.hidden, false);
+assert.equal(failedDetails.textContent, detailText);
+assert(find(card('mislukt-met-details'), 'taak-submeta').textContent.includes('opnieuw gestart uit taak 42'));
+assert(find(card('mislukt-met-details'), 'taak-submeta').textContent.includes('plan: nachtplan'));
+context.renderLijst();
+assert.equal(detailButton('mislukt-met-details').getAttribute('aria-expanded'), 'true', 'task detail state survives list rendering');
+assert.equal(detailButton('mislukt-zonder-details'), null, 'task without details has no Details button');
 
 const fallbackButton = detailButton('zonder-details');
 assert.equal(fallbackButton.getAttribute('aria-controls'), null);
