@@ -155,7 +155,7 @@ const taken = [
   { id: 4, status: 'nieuw',       titel: 'Nieuw taak',       agent: 'd', bijgewerkt: '2025-01-01T00:00:00Z' },
   { id: 5, status: 'gepland',     titel: 'Gepland taak',     agent: 'e', bijgewerkt: '2025-01-01T00:00:00Z' },
   { id: 6, status: 'wacht_op_akkoord', titel: 'Akkoord taak', agent: 'f', bijgewerkt: '2025-01-01T00:00:00Z' },
-  { id: 7, status: 'wacht_op_akkoord', titel: 'Akkoord veel vragen', agent: 'g', bijgewerkt: '2025-01-01T00:00:00Z', akkoord: { id: 20, ja: 'Jan', risico: 'Laag', vragen: 3 } },
+  { id: 7, status: 'wacht_op_akkoord', titel: 'Akkoord veel vragen', agent: 'g', bijgewerkt: '2025-01-01T00:00:00Z', akkoord: { id: 20, ja: 'Jan', risico: 'Laag', vragen: 3, details: 'Toelichting' } },
   { id: 8, status: 'wacht_op_akkoord', titel: 'Akkoord weinig vragen', agent: 'h', bijgewerkt: '2025-01-01T00:00:00Z', akkoord: { id: 21, ja: 'Jan', risico: 'Laag', vragen: 1 } },
   { id: 9, status: 'wacht_op_akkoord', titel: 'Akkoord geen velden', agent: 'i', bijgewerkt: '2025-01-01T00:00:00Z', akkoord: { id: 22 } }
 ];
@@ -293,9 +293,15 @@ if (card7Details.textContent !== 'Details') {
   throw new Error('Test 12: Details-knop tekst is "' + card7Details.textContent + '"');
 }
 
-// === Test 13: Details knop heeft click listener (zet hash) ===
+// === Test 13: Details knop heeft click listener ===
 if (!card7Details._listeners || !card7Details._listeners.click || card7Details._listeners.click.length === 0) {
   throw new Error('Test 13: Details-knop heeft geen click listener');
+}
+
+// === Test 13b: akkoord zonder details heeft geen Details knop ===
+const card9Acties = card9.children.find(c => c.className === 'taak-acties');
+if (card9Acties.children.find(c => c.className === 'btn btn-details')) {
+  throw new Error('Test 13b: onverwachte Details-knop bij akkoord zonder details');
 }
 
 // === Test 14: akkoord-zin gebruikt textContent (niet innerHTML) ===

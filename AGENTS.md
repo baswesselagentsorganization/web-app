@@ -22,7 +22,7 @@ Na een merge in `main` rolt Agenthub (de hub op agentserver) precies die commit 
 - camelCase voor variabelen en functies, kebab-case voor CSS-klassen; JSDoc-annotaties; `async/await` voor API-aanroepen.
 - Geen dependencies, geen bundler, geen framework. Tekst uit de API altijd met `textContent`, nooit met `innerHTML`.
 - Looptijd wordt alleen getoond voor `bezig`-taken met API-veld `bezig_sinds`; `bijgewerkt` is geen starttijd.
-- De knop Details klapt `akkoord.details` in de kaart uit als de API een niet-lege string stuurt. De open status blijft tijdens opnieuw renderen bewaard; ontbrekende of lege details sturen door naar `#chat`.
+- De knop Details klapt `akkoord.details` in de kaart uit als de API een niet-lege string stuurt. De knop bestaat niet als details ontbreken of leeg zijn. De open status blijft tijdens opnieuw renderen bewaard.
 
 ## Valkuilen
 - De tests draaien in Node.js met nagebootste `document` en `window`; ze raken geen browser.

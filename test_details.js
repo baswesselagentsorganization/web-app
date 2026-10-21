@@ -48,6 +48,7 @@ const detailText = 'Eerste regel\nTweede regel <script>niet uitvoeren</script>';
 const tasks = [
   { id: 'met-details', status: 'wacht_op_akkoord', titel: 'Taak met details', agent: 'test', bijgewerkt: '2025-01-01', akkoord: { id: 1, details: detailText } },
   { id: 'zonder-details', status: 'wacht_op_akkoord', titel: 'Taak zonder details', agent: 'test', bijgewerkt: '2025-01-01', akkoord: { id: 2 } },
+  { id: 'lege-details', status: 'wacht_op_akkoord', titel: 'Taak met lege details', agent: 'test', bijgewerkt: '2025-01-01', akkoord: { id: 3, details: '  ' } },
   { id: 'mislukt-met-details', status: 'mislukt', titel: 'Mislukte taak', agent: 'test', bijgewerkt: '2025-01-01', details: detailText, herstart_van: 42, plan: 'nachtplan' },
   { id: 'mislukt-zonder-details', status: 'mislukt', titel: 'Oude API taak', agent: 'test', bijgewerkt: '2025-01-01' }
 ];
@@ -101,8 +102,7 @@ context.renderLijst();
 assert.equal(detailButton('mislukt-met-details').getAttribute('aria-expanded'), 'true', 'task detail state survives list rendering');
 assert.equal(detailButton('mislukt-zonder-details'), null, 'task without details has no Details button');
 
-const fallbackButton = detailButton('zonder-details');
-assert.equal(fallbackButton.getAttribute('aria-controls'), null);
-fallbackButton.click();
-assert.equal(parentWindow.location.hash, '#chat', 'missing details preserve the chat fallback');
+assert.equal(detailButton('zonder-details'), null, 'approval without details has no Details button');
+assert.equal(detailButton('lege-details'), null, 'approval with whitespace-only details has no Details button');
+assert.equal(parentWindow.location.hash, '', 'missing approval details do not redirect to chat');
 console.log('Details tests passed');

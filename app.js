@@ -504,7 +504,7 @@ function maakKaart(taak) {
     btnDetails.textContent = 'Details';
     btnDetails.setAttribute('aria-label', `Details: ${taak.titel}`);
     const detailsTekst = akk.details;
-    if (typeof detailsTekst === 'string' && detailsTekst.length > 0) {
+    if (typeof detailsTekst === 'string' && detailsTekst.trim().length > 0) {
       const taakId = String(taak.id);
       const detailsId = `taak-details-${taakId}`;
       const details = document.createElement('div');
@@ -520,11 +520,6 @@ function maakKaart(taak) {
         btnDetails.setAttribute('aria-expanded', String(!details.hidden));
         if (details.hidden) openAkkoordDetails.delete(taakId);
         else openAkkoordDetails.add(taakId);
-      });
-      acties.appendChild(btnDetails);
-    } else {
-      btnDetails.addEventListener('click', () => {
-        window.parent.location.hash = '#chat';
       });
       acties.appendChild(btnDetails);
     }
