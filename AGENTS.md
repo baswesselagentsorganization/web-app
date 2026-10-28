@@ -6,8 +6,9 @@ De takenpagina van Agenthub: een PWA (HTML, CSS en JavaScript, zonder framework)
 ## Mappenstructuur
 - `index.html`: de enige pagina (taaklijst, filters, zoekveld).
 - `app.js`: alle logica (laden van `/api/taken`, filters, zoeken, akkoordkaart, ⋮-menu met Annuleren, archief).
-- `style.css`: donker thema, responsive.
-- `sw.js`: service worker die de app shell cachet (`takenbeheer-v6`).
+- `style.css`: lila Apple-minimalistisch thema (donker en licht via `prefers-color-scheme`, kleuren als CSS-variabelen in `:root`), responsive.
+- `sw.js`: service worker die de app shell cachet (`takenbeheer-v8`).
+- `voorbeeld.html`: statische previewpagina met nepdata voor de opmaak; verwijderen vóór merge.
 - `manifest.json` en `icons/`: PWA-manifest en iconen.
 - `test_*.js`: 12 testbestanden (Node.js met de `vm`-module, zonder dependencies).
 
