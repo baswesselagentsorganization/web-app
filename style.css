@@ -399,6 +399,8 @@ main {
   margin-top: 0.15rem;
   font-size: 13px;
   font-weight: 500;
+  /* app.js sets an inline owner color; the owner is shown by the dot, so keep the text gray */
+  color: var(--text-2) !important;
 }
 
 /* === Actions === */
