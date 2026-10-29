@@ -144,12 +144,12 @@ async function main() {
     const { context, dom } = setup({ apiData: { eigenaar: 'Bas', kleuren: {}, open_akkoorden: 3, taken: [kaart({ status: 'wacht_op_akkoord' })] } });
     await context.laadTaken();
     assert.strictEqual(dom['wacht-akkoord-teller'].textContent, 'wacht op akkoord: 3');
-    assert.strictEqual(dom['wacht-akkoord-teller'].style.display, 'block');
+    assert.strictEqual(dom['wacht-akkoord-teller'].hidden, false);
   }
   {
     const { context, dom } = setup({ apiData: { eigenaar: 'Bas', kleuren: {}, open_akkoorden: 0, taken: [kaart({ status: 'wacht_op_akkoord' })] } });
     await context.laadTaken();
-    assert.strictEqual(dom['wacht-akkoord-teller'].style.display, 'none');
+    assert.strictEqual(dom['wacht-akkoord-teller'].hidden, true);
   }
   {
     const { context, dom } = setup({ apiData: { eigenaar: 'Bas', kleuren: {}, taken: [

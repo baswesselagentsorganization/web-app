@@ -86,17 +86,11 @@ assert.strictEqual(ids(filterTaken(dataOudeHub, 'alle', '', [], 'alle')), '1,2')
 assert.strictEqual(ids(filterTaken(dataOudeHub, 'alle', '', [], 'eigen')), '1,2');
 
 
-// --- Test 7-8: border color via setProperty in maakKaart ---
-
-// Test 7: ongeldige kleur — maakKaart roept setProperty en zet grijs
+// --- Test 7-8: owner color is represented by the shared CSS dot, never inline styles ---
 const li7 = context.maakKaart({ id: 10, titel: 'Test', status: 'bezig', kleur: '#zzz', agent: 'test' });
-assert.strictEqual(li7.style['--eigenaar-kleur'], '#6b7280',
-  'ongeldige kleur -> grijs (#6b7280) via setProperty');
-
-// Test 8: geldige kleur — maakKaart roept setProperty met de kleur
+assert.strictEqual(li7.style['--eigenaar-kleur'], undefined, 'geen inline eigenaar-kleur');
 const li8 = context.maakKaart({ id: 11, titel: 'Test', status: 'bezig', kleur: '#ea580c', agent: 'test' });
-assert.strictEqual(li8.style['--eigenaar-kleur'], '#ea580c',
-  'geldige kleur via setProperty');
+assert.strictEqual(li8.style['--eigenaar-kleur'], undefined, 'API-kleur wordt niet inline gezet');
 
 // --- Test 9: geen akkoordknoppen bij eigen === false ---
 const taak3 = { id: 3, titel: 'Andermans taak', status: 'wacht_op_akkoord', eigen: false, eigenaar: 'Wessel', kleur: '#ea580c', akkoord: { id: 42 } };
