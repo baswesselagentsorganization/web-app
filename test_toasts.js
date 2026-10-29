@@ -60,6 +60,9 @@ async function main() {
   // 2. Toast disappears after its timeout; at most 3 stay on screen
   {
     const { context, dom, timers } = setup();
+    // A real HTMLCollection has no includes(); do not let the fake hide that
+    dom.toasts = makeEl();
+    dom.toasts.children.includes = undefined;
     for (let i = 0; i < 5; i++) context.toonToast('t' + i);
     assert.strictEqual(dom.toasts.children.length, 3);
     assert.strictEqual(dom.toasts.children[0].textContent, 't2');

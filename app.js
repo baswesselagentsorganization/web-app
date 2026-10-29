@@ -63,7 +63,7 @@ function toonToast(tekst, soort = 'ok') {
   }
   if (typeof setTimeout === 'function') {
     setTimeout(() => {
-      if (houder.removeChild && houder.children && houder.children.includes(toast)) houder.removeChild(toast);
+      if (houder.removeChild && Array.from(houder.children || []).includes(toast)) houder.removeChild(toast);
     }, TOAST_DUUR_MS);
   }
   return toast;
