@@ -38,6 +38,92 @@ const GESLOTEN_LK = 'verborgen-taken';
 
 const AFGEROND = ['klaar', 'mislukt', 'geannuleerd'];
 
+// === Toasts ===
+
+const TOAST_DUUR_MS = 4000;
+const TOAST_MAX = 3;
+
+/**
+ * Show a short outcome message in the aria-live toast container.
+ * @param {string} tekst
+ * @param {'ok' | 'fout'} [soort]
+ * @returns {any} the toast element, or null if there is no container
+ */
+function toonToast(tekst, soort = 'ok') {
+  const houder = document.getElementById('toasts');
+  if (!houder) return null;
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${soort}`;
+  // Errors interrupt the screen reader; other outcomes wait for a pause
+  toast.setAttribute('role', soort === 'fout' ? 'alert' : 'status');
+  toast.textContent = tekst;
+  houder.appendChild(toast);
+  while (houder.children && houder.children.length > TOAST_MAX) {
+    houder.removeChild(houder.children[0]);
+  }
+  if (typeof setTimeout === 'function') {
+    setTimeout(() => {
+      if (houder.removeChild && Array.from(houder.children || []).includes(toast)) houder.removeChild(toast);
+    }, TOAST_DUUR_MS);
+  }
+  return toast;
+}
+
+// === Reject sheet ===
+
+/** Resolver of the open reject sheet (null when closed) */
+let afwijsResolve = null;
+let afwijsGebonden = false;
+let afwijsTerugFocus = null;
+
+/** Close the sheet and settle the promise: reason string on confirm, null on cancel. */
+function sluitAfwijsSheet(reden) {
+  const sheet = document.getElementById('afwijs-sheet');
+  if (sheet) sheet.hidden = true;
+  const resolve = afwijsResolve;
+  afwijsResolve = null;
+  if (afwijsTerugFocus && typeof afwijsTerugFocus.focus === 'function') afwijsTerugFocus.focus();
+  afwijsTerugFocus = null;
+  if (resolve) resolve(reden);
+}
+
+function bindAfwijsSheet() {
+  if (afwijsGebonden) return;
+  afwijsGebonden = true;
+  document.getElementById('afwijs-annuleer')?.addEventListener('click', () => sluitAfwijsSheet(null));
+  document.getElementById('afwijs-backdrop')?.addEventListener('click', () => sluitAfwijsSheet(null));
+  document.getElementById('afwijs-bevestig')?.addEventListener('click', () => {
+    const veld = document.getElementById('afwijs-reden');
+    sluitAfwijsSheet(veld ? String(veld.value ?? '').trim() : '');
+  });
+  document.getElementById('afwijs-sheet')?.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      sluitAfwijsSheet(null);
+    }
+  });
+}
+
+/**
+ * Open the reject bottom sheet for a task.
+ * @param {any} taak
+ * @returns {Promise<string | null>} the (possibly empty) reason, or null if cancelled
+ */
+function vraagAfwijsReden(taak) {
+  const sheet = document.getElementById('afwijs-sheet');
+  if (!sheet) return Promise.resolve(null);
+  bindAfwijsSheet();
+  if (afwijsResolve) sluitAfwijsSheet(null);
+  afwijsTerugFocus = document.activeElement || null;
+  const taakEl = document.getElementById('afwijs-taak');
+  if (taakEl) taakEl.textContent = taak.titel ?? '';
+  const veld = document.getElementById('afwijs-reden');
+  if (veld) veld.value = '';
+  sheet.hidden = false;
+  if (veld && typeof veld.focus === 'function') veld.focus();
+  return new Promise(resolve => { afwijsResolve = resolve; });
+}
+
 /**
  * Get IDs of archived tasks (as sent by the API).
  * @returns {string[]}
@@ -67,8 +153,9 @@ async function zetGearchiveerd(taak, gearchiveerd) {
     }
     taak.gearchiveerd = gearchiveerd;
     renderLijst();
+    toonToast(gearchiveerd ? 'Taak gearchiveerd' : 'Taak teruggezet');
   } catch (err) {
-    alert(`Archiveren mislukt: ${err.message}`);
+    toonToast(`Archiveren mislukt: ${err.message}`, 'fout');
   }
 }
 
@@ -222,6 +309,34 @@ function formatDatum(waarde) {
   return isNaN(datum.getTime()) ? waarde : datum.toLocaleString('nl-NL', { dateStyle: 'short', timeStyle: 'short' });
 }
 
+/**
+ * Format a timestamp as relative time ("5 min geleden"). Falls back to the full
+ * date for invalid, future or older-than-a-week values.
+ * @param {string} waarde
+ * @param {Date|string|number} [nu]
+ * @returns {string}
+ */
+function formatRelatief(waarde, nu = new Date()) {
+  const tijd = new Date(waarde).getTime();
+  const current = new Date(nu).getTime();
+  if (!Number.isFinite(tijd) || !Number.isFinite(current) || tijd > current + 60000) return formatDatum(waarde);
+  const minuten = Math.floor(Math.max(0, current - tijd) / 60000);
+  if (minuten < 1) return 'zojuist';
+  if (minuten < 60) return `${minuten} min geleden`;
+  const uren = Math.floor(minuten / 60);
+  if (uren < 24) return `${uren} u geleden`;
+  const dagen = Math.floor(uren / 24);
+  if (dagen < 7) return `${dagen} d geleden`;
+  return formatDatum(waarde);
+}
+
+/** Update relative time labels in place. */
+function verversRelatieveTijden(nu = new Date()) {
+  document.querySelectorAll('.taak-tijd').forEach(el => {
+    el.textContent = formatRelatief(el.dataset.tijd, nu);
+  });
+}
+
 /** Format elapsed time since a task started. @param {string} startIso @param {Date|string|number} [nu] @returns {string} */
 function formatLooptijd(startIso, nu = new Date()) {
   if (!startIso) return '';
@@ -366,13 +481,18 @@ function maakKaart(taak) {
   const meta = document.createElement('div');
   meta.className = 'taak-meta';
   
-  const datumTekst = formatDatum(taak.bijgewerkt);
-  
-  let metaText = `Agent: ${taak.agent} • Bijgewerkt: ${datumTekst}`;
+  meta.textContent = `Agent: ${taak.agent} • Bijgewerkt: `;
+  const tijd = document.createElement('span');
+  tijd.className = 'taak-tijd';
+  tijd.dataset.tijd = taak.bijgewerkt;
+  tijd.title = formatDatum(taak.bijgewerkt);
+  tijd.textContent = formatRelatief(taak.bijgewerkt);
+  meta.appendChild(tijd);
   if (taak.repo) {
-    metaText += ` • Repo: ${taak.repo}`;
+    const repo = document.createElement('span');
+    repo.textContent = ` • Repo: ${taak.repo}`;
+    meta.appendChild(repo);
   }
-  meta.textContent = metaText;
 
   if (taak.status === 'bezig' && taak.bezig_sinds) {
     const looptijd = document.createElement('span');
@@ -463,7 +583,7 @@ function maakKaart(taak) {
     btnAfwijs.textContent = afwijsLabel;
     btnAfwijs.setAttribute('aria-label', `Afwijzen: ${taak.titel}`);
 
-    async function stuurBesluit(besluit) {
+    async function stuurBesluit(besluit, reden = '') {
       btnAkkoord.disabled = true;
       btnAfwijs.disabled = true;
       try {
@@ -474,25 +594,25 @@ function maakKaart(taak) {
             'Content-Type': 'application/json',
             'X-Hub': 'web'
           },
-          body: JSON.stringify({ besluit })
+          body: JSON.stringify(reden ? { besluit, reden } : { besluit })
         });
         if (!response.ok) {
           const errData = await response.json().catch(() => ({}));
           throw new Error(errData.fout || `HTTP fout ${response.status}`);
         }
+        toonToast(besluit === 'akkoord' ? 'Akkoord gegeven' : 'Taak afgewezen');
         await laadTaken();
       } catch (err) {
-        alert(`Actie mislukt: ${err.message}`);
+        toonToast(`Actie mislukt: ${err.message}`, 'fout');
         btnAkkoord.disabled = false;
         btnAfwijs.disabled = false;
       }
     }
 
     btnAkkoord.addEventListener('click', () => stuurBesluit('akkoord'));
-    btnAfwijs.addEventListener('click', () => {
-      if (window.confirm('Weet je zeker dat je deze taak wilt afwijzen?')) {
-        stuurBesluit('afwijzen');
-      }
+    btnAfwijs.addEventListener('click', async () => {
+      const reden = await vraagAfwijsReden(taak);
+      if (reden !== null) stuurBesluit('afwijzen', reden);
     });
 
     acties.appendChild(btnAkkoord);
@@ -725,9 +845,10 @@ async function stuurAkkoord(akkoordId, besluit, btn1, btn2) {
     }
     
     // Succes, lijst herladen
+    toonToast(besluit === 'akkoord' ? 'Akkoord gegeven' : 'Taak afgewezen');
     await laadTaken();
   } catch (err) {
-    alert(`Actie mislukt: ${err.message}`);
+    toonToast(`Actie mislukt: ${err.message}`, 'fout');
     btn1.disabled = false;
     btn2.disabled = false;
   }
@@ -752,9 +873,10 @@ async function stuurAnnuleren(taakId) {
       const errData = await response.json().catch(() => ({}));
       throw new Error(errData.fout || `HTTP fout ${response.status}`);
     }
+    toonToast('Taak geannuleerd');
     await laadTaken();
   } catch (err) {
-    alert(`Annuleren mislukt: ${err.message}`);
+    toonToast(`Annuleren mislukt: ${err.message}`, 'fout');
   }
 }
 
@@ -800,6 +922,7 @@ function setEigenaarFilter(filter) {
     }
   });
 
+  updateFiltermenuKnop();
   renderLijst();
 }
 
@@ -814,7 +937,29 @@ function setToonGearchiveerd(toon) {
     btn.textContent = toon ? 'Verberg gearchiveerd' : 'Toon gearchiveerd';
     btn.setAttribute('aria-pressed', String(toon));
   }
+  updateFiltermenuKnop();
   renderLijst();
+}
+
+/** Mark the filter-menu button when a non-default secondary filter is active. */
+function updateFiltermenuKnop() {
+  const btn = document.getElementById('btn-filtermenu');
+  if (!btn) return;
+  const actief = eigenaarFilter !== 'alle' || toonGearchiveerd;
+  btn.className = actief ? 'btn btn-filtermenu actief' : 'btn btn-filtermenu';
+  btn.textContent = actief ? 'Meer filters (actief) ▾' : 'Meer filters ▾';
+}
+
+/**
+ * Open or close the secondary filter menu.
+ * @param {boolean} open
+ */
+function setFiltermenu(open) {
+  const menu = document.getElementById('filter-menu');
+  const btn = document.getElementById('btn-filtermenu');
+  if (!menu || !btn) return;
+  menu.hidden = !open;
+  btn.setAttribute('aria-expanded', String(open));
 }
 
 /**
@@ -855,6 +1000,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', () => setFilter(btn.dataset.filter));
+  });
+
+  updateFiltermenuKnop();
+  document.getElementById('btn-filtermenu')?.addEventListener('click', () => {
+    const menu = document.getElementById('filter-menu');
+    setFiltermenu(menu ? menu.hidden : false);
   });
 
   // Wire up archived toggle
@@ -914,7 +1065,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }, 30000);
 
-  setInterval(() => verversLooptijden(), 60000);
+  setInterval(() => { verversLooptijden(); verversRelatieveTijden(); }, 60000);
 });
 
 // === Service Worker registration ===

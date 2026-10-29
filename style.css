@@ -602,3 +602,143 @@ html.ingebed main {
     transform: none;
   }
 }
+
+/* === Secondary filter menu === */
+.filter-extra {
+  margin-bottom: 0.75rem;
+}
+
+.btn.btn-filtermenu {
+  min-height: 44px;
+  padding: 0.4rem 1rem;
+  border-radius: 999px;
+  background: var(--fill);
+  color: var(--text-2);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.btn.btn-filtermenu.actief {
+  color: var(--accent-text);
+}
+
+.filter-menu {
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  border-radius: 14px;
+  background: var(--card);
+}
+
+.filter-menu[hidden] {
+  display: none;
+}
+
+.filter-menu .eigenaar-filter {
+  margin: 0 0 0.5rem;
+  padding: 0;
+}
+
+.filter-menu .btn.btn-toon-gearchiveerd {
+  margin-bottom: 0;
+}
+
+/* === Toasts === */
+.toasts {
+  position: fixed;
+  left: 50%;
+  bottom: calc(1rem + var(--safe-b));
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: min(92vw, 420px);
+  z-index: 500;
+  pointer-events: none;
+}
+
+.toast {
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  background: var(--card);
+  color: var(--text);
+  border-left: 4px solid var(--accent);
+  box-shadow: var(--shadow);
+  font-size: 0.9rem;
+}
+
+.toast-fout {
+  border-left-color: var(--dot-mislukt);
+}
+
+/* === Bottom sheet === */
+.sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 600;
+}
+
+.sheet[hidden] {
+  display: none;
+}
+
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.sheet-paneel {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 1.25rem 1.25rem calc(1.25rem + var(--safe-b));
+  background: var(--card);
+  border-radius: 20px 20px 0 0;
+  box-shadow: var(--shadow);
+  z-index: 1;
+}
+
+.sheet-titel {
+  margin: 0 0 0.25rem;
+  font-size: 1.1rem;
+}
+
+.sheet-taak {
+  margin: 0 0 0.75rem;
+  color: var(--text-2);
+  font-size: 0.9rem;
+}
+
+.sheet-label {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: var(--text-2);
+  font-size: 0.85rem;
+}
+
+.sheet-reden {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: none;
+  border-radius: 12px;
+  background: var(--fill);
+  color: var(--text);
+  font: inherit;
+  resize: vertical;
+}
+
+.sheet-acties {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.btn-afwijs-bevestig {
+  background-color: var(--accent);
+  color: var(--on-accent);
+}
