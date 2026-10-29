@@ -45,14 +45,17 @@
       <button class="filter-btn" type="button" data-filter="mislukt">Mislukt</button>
     </nav>
 
-    <!-- Owner filter -->
-    <nav class="eigenaar-filter" aria-label="Filter op eigenaar">
-      <button class="eigenaar-filter-btn active" type="button" data-eigenaarfilter="alle">Alle taken</button>
-      <button class="eigenaar-filter-btn" type="button" data-eigenaarfilter="eigen">Door jou aangemaakt</button>
-    </nav>
-
-    <!-- Archived toggle -->
-    <button id="btn-toon-gearchiveerd" class="btn btn-toon-gearchiveerd" type="button" aria-pressed="false">Toon gearchiveerd</button>
+    <!-- Secondary filters: owner filter and archived toggle in one small menu -->
+    <div class="filter-extra">
+      <button id="btn-filtermenu" class="btn btn-filtermenu" type="button" aria-expanded="false" aria-controls="filter-menu">Meer filters ▾</button>
+      <div id="filter-menu" class="filter-menu" hidden>
+        <nav class="eigenaar-filter" aria-label="Filter op eigenaar">
+          <button class="eigenaar-filter-btn active" type="button" data-eigenaarfilter="alle">Alle taken</button>
+          <button class="eigenaar-filter-btn" type="button" data-eigenaarfilter="eigen">Door jou aangemaakt</button>
+        </nav>
+        <button id="btn-toon-gearchiveerd" class="btn btn-toon-gearchiveerd" type="button" aria-pressed="false">Toon gearchiveerd</button>
+      </div>
+    </div>
 
     <!-- Wacht op akkoord teller -->
     <div id="wacht-akkoord-teller" class="wacht-akkoord-teller" style="display: none;"></div>
@@ -62,6 +65,24 @@
       <li class="status-msg">Laden…</li>
     </ul>
   </main>
+
+  <!-- Toasts for outcomes -->
+  <div id="toasts" class="toasts" aria-live="polite" aria-atomic="false"></div>
+
+  <!-- Bottom sheet: reject with reason -->
+  <div id="afwijs-sheet" class="sheet" hidden>
+    <div id="afwijs-backdrop" class="sheet-backdrop"></div>
+    <div class="sheet-paneel" role="dialog" aria-modal="true" aria-labelledby="afwijs-titel">
+      <h2 id="afwijs-titel" class="sheet-titel">Taak afwijzen</h2>
+      <p id="afwijs-taak" class="sheet-taak"></p>
+      <label for="afwijs-reden" class="sheet-label">Reden (optioneel)</label>
+      <textarea id="afwijs-reden" class="sheet-reden" rows="3" maxlength="500" placeholder="Waarom wijs je dit af?"></textarea>
+      <div class="sheet-acties">
+        <button id="afwijs-annuleer" class="btn btn-details" type="button">Annuleren</button>
+        <button id="afwijs-bevestig" class="btn btn-afwijs-bevestig" type="button">Afwijzen</button>
+      </div>
+    </div>
+  </div>
 
   <script src="app.js"></script>
 </body>

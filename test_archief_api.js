@@ -78,12 +78,16 @@ async function main() {
 
   // 2. Error (409): task stays as it was, short message
   {
-    const { context, alerts } = setup({ apiData: { eigenaar: 'Bas', kleuren: {}, taken: [kaart({ gearchiveerd: false })] }, archiefStatus: 409 });
+    const { context, alerts, dom } = setup({ apiData: { eigenaar: 'Bas', kleuren: {}, taken: [kaart({ gearchiveerd: false })] }, archiefStatus: 409 });
     await context.laadTaken();
     const taak = vm.runInContext('taken[0]', context);
     await context.zetGearchiveerd(taak, true);
     assert.strictEqual(taak.gearchiveerd, false);
-    assert.strictEqual(alerts.length, 1);
+    // Outcome is shown as an error toast now, not as an alert
+    assert.strictEqual(alerts.length, 0);
+    assert.strictEqual(dom.toasts.children.length, 1);
+    assert.ok(dom.toasts.children[0].className.includes('toast-fout'));
+    assert.ok(dom.toasts.children[0].textContent.startsWith('Archiveren mislukt'));
   }
 
   // 3. Migration: only finished, not yet archived tasks that are in the list; key removed; list reloaded
