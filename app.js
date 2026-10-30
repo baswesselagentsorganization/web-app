@@ -245,12 +245,8 @@ function updateWachtAkkoordTeller() {
   if (!tellerEl) return;
 
   const aantal = openAkkoorden ?? taken.filter(t => t.status === 'wacht_op_akkoord' && t.eigen !== false).length;
-  if (aantal > 0) {
-    tellerEl.textContent = `wacht op akkoord: ${aantal}`;
-    tellerEl.style.display = 'block';
-  } else {
-    tellerEl.style.display = 'none';
-  }
+  tellerEl.textContent = aantal > 0 ? `wacht op akkoord: ${aantal}` : '';
+  tellerEl.hidden = aantal <= 0;
 }
 
 /**
@@ -462,14 +458,6 @@ function maakKaart(taak) {
   li.dataset.id = taak.id;
   li.dataset.status = taak.status;
 
-  // Colored left border based on owner color
-  const kleur = taak.kleur ?? '';
-  if (/^#[0-9a-fA-F]{6}$/.test(kleur)) {
-    li.style.setProperty("--eigenaar-kleur", kleur);
-  } else {
-    li.style.setProperty("--eigenaar-kleur", "#6b7280");
-  }
-
   const badge = document.createElement('span');
   badge.className = `status-badge ${taak.status}`;
   badge.textContent = STATUS_LABELS[taak.status] ?? taak.status;
@@ -520,8 +508,6 @@ function maakKaart(taak) {
     const label = document.createElement('span');
     label.className = 'eigenaar-label';
     label.textContent = `van ${taak.eigenaar}`;
-    const labelKleur = (taak.kleur && /^#[0-9a-fA-F]{6}$/.test(taak.kleur)) ? taak.kleur : '#6b7280';
-    label.style.color = labelKleur;
     li.appendChild(label);
   }
 
@@ -854,12 +840,41 @@ async function stuurAkkoord(akkoordId, besluit, btn1, btn2) {
   }
 }
 
+let annuleerResolve = null;
+let annuleerGebonden = false;
+
+/** Ask for an explicit confirmation before stopping a task. */
+function vraagAnnuleerBevestiging(taakId) {
+  const sheet = document.getElementById('annuleer-sheet');
+  if (!sheet) return Promise.resolve(false);
+  if (!annuleerGebonden) {
+    annuleerGebonden = true;
+    const settle = (confirmed) => {
+      sheet.hidden = true;
+      const resolve = annuleerResolve;
+      annuleerResolve = null;
+      if (resolve) resolve(confirmed);
+    };
+    document.getElementById('annuleer-terug')?.addEventListener('click', () => settle(false));
+    document.getElementById('annuleer-backdrop')?.addEventListener('click', () => settle(false));
+    document.getElementById('annuleer-bevestig')?.addEventListener('click', () => settle(true));
+    sheet.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { e.preventDefault(); settle(false); }
+    });
+  }
+  const tekst = document.getElementById('annuleer-tekst');
+  if (tekst) tekst.textContent = `Taak ${taakId} annuleren? Een lopende agent stopt en er wordt niets gepusht.`;
+  sheet.hidden = false;
+  document.getElementById('annuleer-terug')?.focus();
+  return new Promise(resolve => { annuleerResolve = resolve; });
+}
+
 /**
- * Cancel a task. Prompts confirmation, then POSTs to the API.
+ * Cancel a task after explicit confirmation, then POST to the API.
  * @param {string | number} taakId
  */
 async function stuurAnnuleren(taakId) {
-  if (!window.confirm(`Taak ${taakId} annuleren? Een lopende agent stopt en er wordt niets gepusht.`)) return;
+  if (!await vraagAnnuleerBevestiging(taakId)) return;
   try {
     const response = await fetch(`/api/taken/${taakId}/annuleren`, {
       method: 'POST',

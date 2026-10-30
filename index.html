@@ -4,7 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="description" content="Takenlijst met akkoord en afwijs functie" />
-  <meta name="theme-color" content="#a78bfa" />
+  <meta name="theme-color" content="#0b0b10" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#a78bfa" media="(prefers-color-scheme: light)" />
 
   <title>Takenbeheer</title>
 
@@ -58,7 +59,7 @@
     </div>
 
     <!-- Wacht op akkoord teller -->
-    <div id="wacht-akkoord-teller" class="wacht-akkoord-teller" style="display: none;"></div>
+    <div id="wacht-akkoord-teller" class="wacht-akkoord-teller" hidden></div>
 
     <!-- Task list, populated by app.js -->
     <ul id="taak-lijst" aria-live="polite" aria-label="Takenlijst">
@@ -80,6 +81,18 @@
       <div class="sheet-acties">
         <button id="afwijs-annuleer" class="btn btn-details" type="button">Annuleren</button>
         <button id="afwijs-bevestig" class="btn btn-afwijs-bevestig" type="button">Afwijzen</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="annuleer-sheet" class="sheet" hidden>
+    <div id="annuleer-backdrop" class="sheet-backdrop"></div>
+    <div class="sheet-paneel" role="alertdialog" aria-modal="true" aria-labelledby="annuleer-titel" aria-describedby="annuleer-tekst">
+      <h2 id="annuleer-titel" class="sheet-titel">Taak annuleren?</h2>
+      <p id="annuleer-tekst" class="sheet-taak"></p>
+      <div class="sheet-acties">
+        <button id="annuleer-terug" class="btn btn-details" type="button">Terug</button>
+        <button id="annuleer-bevestig" class="btn btn-afwijs-bevestig" type="button">Annuleer taak</button>
       </div>
     </div>
   </div>

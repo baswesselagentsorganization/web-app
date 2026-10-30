@@ -8,7 +8,7 @@ const context = {
   document: {
     getElementById: (id) => {
       if (!dom[id]) {
-        dom[id] = { textContent: '', style: { display: '' } };
+        dom[id] = { textContent: '', hidden: true, style: { display: '' } };
       }
       return dom[id];
     },
@@ -36,15 +36,15 @@ const testCode = `
   // Test 1: N = 0
   taken = [{ status: 'bezig' }, { status: 'klaar' }];
   updateWachtAkkoordTeller();
-  if (tellerEl.style.display !== 'none') {
-    throw new Error('Test 1 Failed: tellerEl.style.display is not "none" for N=0');
+  if (tellerEl.hidden !== true) {
+    throw new Error('Test 1 Failed: tellerEl.hidden is not true for N=0');
   }
   
   // Test 2: N > 0
   taken = [{ status: 'wacht_op_akkoord' }, { status: 'wacht_op_akkoord' }, { status: 'bezig' }];
   updateWachtAkkoordTeller();
-  if (tellerEl.style.display === 'none') {
-    throw new Error('Test 2 Failed: tellerEl.style.display should not be "none" for N=2');
+  if (tellerEl.hidden !== false) {
+    throw new Error('Test 2 Failed: tellerEl.hidden should be false for N=2');
   }
   if (tellerEl.textContent !== 'wacht op akkoord: 2') {
     throw new Error('Test 2 Failed: tellerEl.textContent is incorrect, got: ' + tellerEl.textContent);

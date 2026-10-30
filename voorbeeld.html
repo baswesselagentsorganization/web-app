@@ -3,65 +3,84 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#a78bfa" />
-  <title>Voorbeeld (nepdata)</title>
+  <meta name="theme-color" content="#0b0b10" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#a78bfa" media="(prefers-color-scheme: light)" />
+  <title>Voorbeeld huisstijl (nepdata)</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- Static preview with fake data; remove before merge. -->
   <header class="app-header">
-    <div class="header-content"><div><h1>Taken</h1><p>Taken bekijken, goedkeuren of afwijzen</p></div></div>
+    <div class="header-content"><div><h1>Taken van Bas</h1><p>Taken bekijken, goedkeuren of afwijzen</p></div></div>
   </header>
-  <button class="btn btn-vernieuwen" type="button" aria-label="Vernieuwen">↻</button>
+  <button class="btn-vernieuwen" type="button" aria-label="Vernieuwen">↻</button>
   <main>
-    <input class="zoekveld" type="search" placeholder="Zoek op titel…" aria-label="Zoek" />
+    <input class="zoekveld" type="search" placeholder="Zoek op titel…" aria-label="Zoek in takenlijst" />
     <nav class="filter-tabs" aria-label="Filter op status">
       <button class="filter-btn active" type="button">Alle</button>
-      <button class="filter-btn" type="button">Wacht op akkoord</button>
+      <button class="filter-btn" type="button">Wacht op akkoord · 2</button>
       <button class="filter-btn" type="button">Bezig</button>
       <button class="filter-btn" type="button">Klaar</button>
       <button class="filter-btn" type="button">Mislukt</button>
     </nav>
-    <nav class="eigenaar-filter" aria-label="Filter op eigenaar">
-      <button class="eigenaar-filter-btn active" type="button">Alle taken</button>
-      <button class="eigenaar-filter-btn" type="button">Door jou aangemaakt</button>
-    </nav>
-    <button class="btn btn-toon-gearchiveerd" type="button" aria-pressed="false">Toon gearchiveerd</button>
-    <ul id="taak-lijst">
-      <li class="taak-kaart" data-status="wacht_op_akkoord" style="--eigenaar-kleur:#a78bfa">
+    <div class="filter-extra">
+      <button class="btn-filtermenu actief" type="button" aria-expanded="true">Meer filters (actief) ▴</button>
+      <div class="filter-menu">
+        <nav class="eigenaar-filter" aria-label="Filter op eigenaar">
+          <button class="eigenaar-filter-btn active" type="button">Alle taken</button>
+          <button class="eigenaar-filter-btn" type="button">Door jou aangemaakt</button>
+        </nav>
+        <button class="btn-toon-gearchiveerd" type="button" aria-pressed="false">Toon gearchiveerd</button>
+      </div>
+    </div>
+    <ul id="taak-lijst" aria-label="Voorbeeldtaken">
+      <li class="taak-kaart" data-status="wacht_op_akkoord">
         <span class="status-badge wacht_op_akkoord">Wacht op akkoord</span>
-        <p class="taak-titel">Nepdata: rapport over weekcijfers opstellen</p>
-        <div class="taak-meta">Agent: codeur • Bijgewerkt: 28 okt 14:02 • Repo: voorbeeld</div>
+        <p class="taak-titel">Nepdata: weekrapport klaarzetten</p>
+        <div class="taak-meta">Agent: codeur • Bijgewerkt: zojuist • Repo: voorbeeld</div>
+        <span class="eigenaar-label">van Wessel</span>
         <div class="taak-acties">
           <div class="akkoord-zin">Ja = de wijziging wordt samengevoegd; risico: laag.</div>
+          <button class="btn btn-details" type="button">Details</button>
           <button class="btn btn-afwijs" type="button">Afwijzen</button>
           <button class="btn btn-akkoord" type="button">✓ Akkoord</button>
-          <div class="taak-menu"><button class="icoon-knop taak-menu-btn" type="button" aria-label="Meer opties">⋮</button></div>
+          <div class="taak-menu"><button class="icoon-knop taak-menu-btn" type="button" aria-label="Meer opties">⋮</button><div class="taak-dropdown open"><button type="button">Annuleren</button></div></div>
         </div>
+        <div class="taak-details">Nepdetails: voorbeeld van akkoorddetails en monospace weergave.</div>
       </li>
-      <li class="taak-kaart" data-status="bezig" style="--eigenaar-kleur:#6b7280">
+      <li class="taak-kaart" data-status="bezig">
         <span class="status-badge bezig">Bezig</span>
-        <p class="taak-titel">Nepdata: een heel lange taaktitel die over meerdere regels loopt om te zien hoe afbreken eruitziet</p>
-        <div class="taak-meta">Agent: tester • Bijgewerkt: 28 okt 13:40<span class="taak-looptijd">Bezig: 12 min</span></div>
-        <span class="eigenaar-label">van Wessel</span>
-        <div class="taak-acties"><div class="taak-menu"><button class="icoon-knop taak-menu-btn" type="button" aria-label="Meer opties">⋮</button></div></div>
+        <p class="taak-titel">Nepdata: een lange taaktitel die netjes over meerdere regels afbreekt</p>
+        <div class="taak-meta">Agent: tester • Bijgewerkt: 5 min geleden <span class="taak-looptijd">Bezig: 12 min</span></div>
+        <div class="taak-acties"><button class="icoon-knop" type="button" aria-label="Archiveren">□</button><div class="taak-menu"><button class="icoon-knop taak-menu-btn" type="button" aria-label="Meer opties">⋮</button></div></div>
       </li>
-      <li class="taak-kaart" data-status="klaar" style="--eigenaar-kleur:#a78bfa">
+      <li class="taak-kaart" data-status="klaar">
         <span class="status-badge klaar">Klaar</span>
         <p class="taak-titel">Nepdata: README bijwerken</p>
-        <div class="taak-meta">Agent: codeur • Bijgewerkt: 27 okt 09:15</div>
-        <div class="taak-acties"><div class="taak-menu"><button class="icoon-knop taak-menu-btn" type="button" aria-label="Meer opties">⋮</button></div></div>
+        <div class="taak-meta">Agent: codeur • Bijgewerkt: gisteren</div>
+        <div class="taak-acties"><button class="icoon-knop" type="button" aria-label="Archiveren">□</button></div>
       </li>
-      <li class="taak-kaart" data-status="mislukt" style="--eigenaar-kleur:#a78bfa">
+      <li class="taak-kaart" data-status="mislukt">
         <span class="status-badge mislukt">Mislukt</span>
         <p class="taak-titel">Nepdata: migratie draaien</p>
-        <div class="taak-meta">Agent: codeur • Bijgewerkt: 26 okt 17:50</div>
-        <div class="taak-acties">
-          <button class="btn btn-details" type="button">Details</button>
-          <div class="taak-details">Nepfout: tijdslimiet bereikt.</div>
-        </div>
+        <div class="taak-meta">Agent: codeur • Bijgewerkt: gisteren</div>
+        <div class="taak-acties"><button class="btn btn-details" type="button">Details</button></div>
+        <div class="taak-details">Nepfout: tijdslimiet bereikt.</div>
       </li>
+      <li class="status-msg">Geen taken gevonden</li>
+      <li class="status-msg">Laden…</li>
+      <li class="status-msg error">Voorbeeldfout: taken konden niet worden geladen.</li>
     </ul>
   </main>
+  <div class="toasts" aria-live="polite"><div class="toast">Akkoord gegeven</div><div class="toast toast-fout">Actie mislukt: voorbeeldfout</div></div>
+  <div class="sheet">
+    <div class="sheet-backdrop"></div>
+    <div class="sheet-paneel" role="dialog" aria-modal="true">
+      <h2 class="sheet-titel">Taak afwijzen</h2>
+      <p class="sheet-taak">Nepdata: weekrapport klaarzetten</p>
+      <label class="sheet-label" for="reden">Reden (optioneel)</label>
+      <textarea id="reden" class="sheet-reden" rows="3" placeholder="Waarom wijs je dit af?"></textarea>
+      <div class="sheet-acties"><button class="btn btn-details" type="button">Annuleren</button><button class="btn btn-afwijs-bevestig" type="button">Afwijzen</button></div>
+    </div>
+  </div>
 </body>
 </html>
