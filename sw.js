@@ -1,7 +1,7 @@
 // sw.js — Service Worker for offline caching
 // Caches app shell on install; serves cached files when offline.
 
-const CACHE_NAME = 'takenbeheer-v10';
+const CACHE_NAME = 'takenbeheer-v11';
 
 const APP_SHELL = [
   './',
@@ -9,6 +9,11 @@ const APP_SHELL = [
   './style.css',
   './app.js',
   './manifest.json',
+  './apple-touch-icon.png',
+  './favicon.ico',
+  './icons/icon-180.png',
+  './icons/favicon-32.png',
+  './icons/favicon-16.png',
 ];
 
 // Install: pre-cache the app shell
